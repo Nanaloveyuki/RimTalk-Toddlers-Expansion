@@ -4,3 +4,5 @@ obj/
 Source/1.6/
 reference/
 Player.log
+artifacts/
+__pycache__/

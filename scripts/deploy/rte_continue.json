@@ -1,0 +1,21 @@
+{
+  "target": "RTEContinue",
+  "package_id": "cj.RimtalkToddlersExpansion.continue",
+  "project": "Source/RimTalk_ToddlersExpansion.csproj",
+  "files": [
+    "About/About.xml",
+    "About/Preview.png",
+    "About/ModIcon.png",
+    "Defs",
+    "Languages",
+    "Patches",
+    "Textures",
+    "LoadFolders.xml",
+    "LICENSE",
+    "README.md",
+    "1.6/Assemblies/RimTalk_ToddlersExpansion.dll",
+    "1.6/Assemblies/RimTalk_ToddlersExpansion.pdb",
+    "1.7/Assemblies/RimTalk_ToddlersExpansion.dll",
+    "1.7/Assemblies/RimTalk_ToddlersExpansion.pdb"
+  ]
+}
