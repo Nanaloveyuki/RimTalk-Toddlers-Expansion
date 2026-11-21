@@ -11,8 +11,19 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	public sealed class JobDriver_ToddlerSelfPlay : JobDriver
 	{
 		private const TargetIndex PlaySpotInd = TargetIndex.A;
+		private const int PlayToilIndex = 1;
 		private AnimationDef _playAnimation;
-		private bool _playStarted;
+		private bool _restorePlayPresentation;
+
+		public override void ExposeData()
+		{
+			base.ExposeData();
+			Scribe_Defs.Look(ref _playAnimation, "playAnimation");
+			if (Scribe.mode == LoadSaveMode.PostLoadInit)
+			{
+				_restorePlayPresentation = CurToilIndex == PlayToilIndex;
+			}
+		}
 
 		public override bool TryMakePreToilReservations(bool errorOnFailed)
 		{
@@ -35,44 +46,29 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		protected override IEnumerable<Toil> MakeNewToils()
 		{
 			this.FailOn(() => pawn.Downed || pawn.Drafted || ToddlerMentalStateUtility.HasBlockingMentalState(pawn));
-			job.reportStringOverride = "RimTalk_ToddlersExpansion_PlayReport_SelfMoving".Translate();
 
-			yield return Toils_Goto.GotoCell(PlaySpotInd, PathEndMode.OnCell);
+			Toil goToSpot = Toils_Goto.GotoCell(PlaySpotInd, PathEndMode.OnCell);
+			goToSpot.AddPreInitAction(() => job.reportStringOverride = "RimTalk_ToddlersExpansion_PlayReport_SelfMoving".Translate());
+			yield return goToSpot;
 
 			Toil play = ToilMaker.MakeToil("ToddlerSelfPlay");
 			play.initAction = () =>
 			{
-				_playStarted = true;
-				if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
-				{
-					_playAnimation = nativeAnimation;
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-				else if (!YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
-				{
-					_playAnimation = ToddlerPlayAnimationUtility.GetRandomSelfPlayAnimation(pawn);
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-				else
-				{
-					_playAnimation = null;
-				}
-
 				job.reportStringOverride = null;
-				if (UsesGenericSelfPlayReport(job))
-				{
-					ToddlerPlayReportUtility.EnsureReportRequested(job, pawn, null, ToddlerPlayReportKind.SelfPlay);
-					ToddlerPlayReportUtility.TryApplyPendingReport(job);
-				}
+				InitializePlayPresentation();
 			};
 			play.tickIntervalAction = delta =>
 			{
-				if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
+				if (_restorePlayPresentation)
+				{
+					_restorePlayPresentation = false;
+					InitializePlayPresentation();
+				}
+				else if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
 				{
 					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
 				}
 
-				// 随机触发咯咯笑效果
 				ToddlerPlayEffectUtility.TryTriggerGigglingEffect(pawn);
 				if (ToddlerCareEventUtility.TryTriggerSelfPlayMishap(pawn, delta))
 				{
@@ -102,7 +98,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			AddFinishAction(condition =>
 			{
 				ToddlerPlayReportUtility.CancelJob(job);
-				if (condition != JobCondition.Succeeded || !_playStarted)
+				if (condition != JobCondition.Succeeded || CurToilIndex < PlayToilIndex)
 				{
 					ToddlerPlayFailureCooldownUtility.StartSelfPlayCooldown(pawn);
 					return;
@@ -112,6 +108,29 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			});
 
 			yield return play;
+		}
+
+		private void InitializePlayPresentation()
+		{
+			if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
+			{
+				_playAnimation = nativeAnimation;
+			}
+			else if (YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
+			{
+				_playAnimation = null;
+			}
+			else
+			{
+				_playAnimation ??= ToddlerPlayAnimationUtility.GetRandomSelfPlayAnimation(pawn);
+			}
+
+			ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
+			if (UsesGenericSelfPlayReport(job))
+			{
+				ToddlerPlayReportUtility.EnsureReportRequested(job, pawn, null, ToddlerPlayReportKind.SelfPlay);
+				ToddlerPlayReportUtility.TryApplyPendingReport(job);
+			}
 		}
 
 		private static bool UsesGenericSelfPlayReport(Job job)

@@ -16,26 +16,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	public sealed class ToddlerSelfBathGameComponent : GameComponent
 	{
 		private const int CheckIntervalTicks = 1200;
-		private static ToddlerSelfBathGameComponent _instance;
 		private readonly HashSet<Pawn> _trackedSelfBathCandidates = new HashSet<Pawn>();
 		private readonly List<Pawn> _trackedCandidatesBuffer = new List<Pawn>(32);
 
-		public static ToddlerSelfBathGameComponent Instance
-		{
-			get
-			{
-				if (_instance == null && Current.Game != null)
-				{
-					_instance = Current.Game.GetComponent<ToddlerSelfBathGameComponent>();
-				}
-
-				return _instance;
-			}
-		}
+		public static ToddlerSelfBathGameComponent Instance => Current.Game?.GetComponent<ToddlerSelfBathGameComponent>();
 
 		public ToddlerSelfBathGameComponent(Game game)
 		{
-			_instance = this;
 		}
 
 		public override void GameComponentTick()
@@ -109,7 +96,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		public static void NotifyPawnSpawned(Pawn pawn)
 		{
-			Instance?.TrackPawnIfRelevant(pawn);
+			NotifyPawnEligibilityChanged(pawn);
 		}
 
 		public static void NotifyPawnDespawned(Pawn pawn)
@@ -119,12 +106,20 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		public static void NotifyPawnFactionChanged(Pawn pawn)
 		{
-			Instance?.TrackPawnIfRelevant(pawn);
+			NotifyPawnEligibilityChanged(pawn);
 		}
 
 		public static void NotifyPawnKilled(Pawn pawn)
 		{
 			Instance?.UntrackPawn(pawn);
+		}
+
+		internal static void NotifyPawnEligibilityChanged(Pawn pawn)
+		{
+			if (pawn?.Spawned == true)
+			{
+				Instance?.TrackPawnIfRelevant(pawn);
+			}
 		}
 
 		private void ResetTracking()

@@ -12,7 +12,7 @@
 - RimWorld 1.7 是后续维护目标。RimWorld 1.6 保留基线中的原版 DLL 和 PDB，以及现有 1.6 加载入口。后续构建只面向 1.7，发布检查对照基线验证 1.6 二进制的哈希。
 - 1.7 使用现有 Toddlers 1.6 DLL 作为依赖基线。本机 RimTalk 声明支持 1.7，运行时按启用状态接入，独立 LLM 和幼儿玩法可在没有 RimTalk 的环境使用。
 - `LoadFolders.xml` 目前让两个版本共用根目录。修改共享 Def、XML 补丁、语言或资源时，先检查原版 1.6 程序集是否仍能加载对应内容。需要 1.7 专用类型或行为时，把受影响的内容放进对应的版本目录，并验证两边各加载一份 Def。
-- 原作者的 README、系统设计文档、规划稿和待办保留原位。文档删除或归档待后续确认。
+- 早期系统设计移至 `plans/archive/`。上游基线保留原作者的 README、`todolist.md` 和架构盘点。
 
 ## 实施顺序
 
@@ -43,6 +43,14 @@ dotnet build Source/RimTalk_ToddlersExpansion.csproj -c Release -o "$build_outpu
 
 用开发模式自动加载一份来自 1.7.5005 的原版存档副本。Continue 版进入地图后成功另存，存档清单写入新包名。两组幼儿和背负者的引用、当前 Job 及背负保护 Hediff 与原存档一致。互动式模组列表差异提示仍需单独验证。
 
+## 首轮局部修复验证
+
+- 在隔离的 1.7 游戏中保存并重读正在独玩、正在互玩和正前往玩伴的幼儿。核对任务阶段和剩余时间、动画、活动描述、结算、玩伴退出和失败冷却。用移除新字段的存档副本验证旧格式回退。旧档缺少互玩的起始娱乐值时继续结算，社交记忆仍按可用起始值和原版年龄规则判定。
+- 用模拟响应验证读档后复用任务 ID、取消后重发以及旧响应延迟到达。Dubs Bad Hygiene 完整版和 Lite 分别验证原地长大、年龄退出、阵营未变化的俘虏与释放。最小环境也通过相同生命周期检查。
+- 首次回归中，并发绘制同时创建动画 worker，触发游戏线程共享字典异常。将本模组使用的玩耍动画 worker 提前到 Def 加载后的初始化阶段创建，复测未再出现该异常。
+- 在 RimWorld 1.7.5014 的 250 × 250 沙漠地图上，启用默认 16 个目的地池，用相同随机种子交替执行新旧聚会资格检查。只有一名儿童时，33 对调用均拒绝开始聚会，单次中位耗时从 6.73 ms 降到 8.1 µs，分配从 147,608 B 降到 216 B。两名合格儿童的 33 对调用均通过，耗时与分配基本持平。
+- 同一张地图上，自然奔跑与聚会野游直接选点的中位耗时分别为 4.18 ms 和 4.96 ms。记录的是单次调用耗时。地标池在两条路径上都占有可测成本，可在后续优化时单独比较。
+
 ## 验证与取舍
 
 - 先用 Harmony、Toddlers 和 Biotech 的最小环境启动 1.7。每批次用涉及的可选模组复测，覆盖缺席和启用两种情况。对话批次另测无独立 API 配置时的固定任务文本。
@@ -52,9 +60,10 @@ dotnet build Source/RimTalk_ToddlersExpansion.csproj -c Release -o "$build_outpu
 
 ## 原作者资料
 
-- [幼儿背负系统](../ToddlerCarryingSystem.md)
-- [Toddlers 工作体系架构分析](../Comprehensive_Toddlers_Job_Architecture.md)
-- [儿童野游系统](../ChildrenOutingSystem.md)
+- [幼儿背负系统早期设计](../../plans/archive/ToddlerCarryingSystem.md)
+- [儿童野游系统早期设计](../../plans/archive/ChildrenOutingSystem.md)
+- Toddlers 工作体系架构分析见上游基线的 `Docs/Comprehensive_Toddlers_Job_Architecture.md`
 - [幼儿无聊机制](../../plans/toddler_boredom_system.md)
 - [ThoughtDef 问题分析](../../plans/bug_fix_thoughtdef_not_memory.md)
-- [项目 README](../../README.md)与[原有待办](../../todolist.md)
+
+当前玩家说明见 [README](../../README.md)，后续工作见 [todo.md](../../todo.md)。

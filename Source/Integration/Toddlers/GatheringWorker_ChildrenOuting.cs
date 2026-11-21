@@ -9,20 +9,10 @@ using Verse.AI.Group;
 
 namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 {
-    /// <summary>
-    /// Gathering worker for children's outing.
-    /// Finds outdoor spots near the map edge for children to gather.
-    /// </summary>
     public class GatheringWorker_ChildrenOuting : GatheringWorker
     {
-        /// <summary>
-        /// Minimum number of children required to start an outing
-        /// </summary>
         private const int MinimumChildrenCount = 2;
 
-        /// <summary>
-        /// Distance from map edge to search for spots
-        /// </summary>
         private const int EdgeDistance = 25;
 
         private const int MaxCandidatesPerPool = 320;
@@ -86,24 +76,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             {
                 organizer = FindOrganizer(map);
             }
-            
-            if (organizer == null)
+
+            if (organizer == null || !HasEnoughChildren(map))
             {
                 return false;
             }
-            
-            if (!TryFindGatherSpot(organizer, out IntVec3 _))
-            {
-                return false;
-            }
-            
-            // Check if there are enough children
-            if (!HasEnoughChildren(map))
-            {
-                return false;
-            }
-            
-            return true;
+
+            return TryFindGatherSpot(organizer, out _);
         }
         
         public override bool TryExecute(Map map, Pawn organizer = null)
@@ -123,18 +102,16 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return false;
             }
             
-            // Gather all eligible participants
             List<Pawn> participants = GatherParticipants(map, organizer);
             if (participants.Count < MinimumChildrenCount)
             {
                 return false;
             }
             
-            // Create the lord job with all participants
             LordJob lordJob = CreateLordJob(spot, organizer);
             Lord lord = LordMaker.MakeNewLord(organizer.Faction, lordJob, organizer.Map, participants);
             
-            // Interrupt current jobs so participants respond immediately
+            // Changing duties leaves existing jobs running until the next job decision.
             foreach (Pawn participant in participants)
             {
                 if (participant.jobs?.curJob != null)
@@ -143,7 +120,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 }
             }
             
-            // Send letter
             SendLetter(spot, organizer);
 
             Log.Message($"[RimTalk_ToddlersExpansion] Children's outing started at {spot}, pool={selectedPool}, organized by {organizer.LabelShort}, participants: {participants.Count}");
@@ -151,17 +127,12 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return true;
         }
         
-        /// <summary>
-        /// Gather all eligible participants for the outing
-        /// </summary>
         private List<Pawn> GatherParticipants(Map map, Pawn organizer)
         {
             List<Pawn> participants = new List<Pawn>();
             
-            // Always add the organizer first
             participants.Add(organizer);
             
-            // Find other children/toddlers to join
             foreach (Pawn pawn in map.mapPawns.FreeColonistsSpawned)
             {
                 if (pawn == organizer)
@@ -179,7 +150,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                     continue;
                 }
                 
-                // Check if can reach the organizer (as a proxy for can reach the gathering)
+                // Reachability to the organizer is a proxy for reachability to the outing spot.
                 if (!pawn.CanReach(organizer, Verse.AI.PathEndMode.Touch, Danger.Some))
                 {
                     continue;
@@ -531,19 +502,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             }
         }
 
-        /// <summary>
-        /// Get cells near the map edges
-        /// </summary>
         private IEnumerable<IntVec3> GetMapEdgeCells(Map map)
         {
             int mapWidth = map.Size.x;
             int mapHeight = map.Size.z;
             
-            // Sample cells near edges (not too close to actual edge for pathfinding)
+            // Leave a margin so participants can path around the gathering spot.
             int minEdgeDist = 5;
             int maxEdgeDist = EdgeDistance;
             
-            // Top edge area
             for (int x = minEdgeDist; x < mapWidth - minEdgeDist; x += 3)
             {
                 for (int z = minEdgeDist; z < maxEdgeDist; z += 3)
@@ -552,7 +519,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 }
             }
             
-            // Bottom edge area
             for (int x = minEdgeDist; x < mapWidth - minEdgeDist; x += 3)
             {
                 for (int z = mapHeight - maxEdgeDist; z < mapHeight - minEdgeDist; z += 3)
@@ -561,7 +527,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 }
             }
             
-            // Left edge area
             for (int x = minEdgeDist; x < maxEdgeDist; x += 3)
             {
                 for (int z = minEdgeDist; z < mapHeight - minEdgeDist; z += 3)
@@ -570,7 +535,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 }
             }
             
-            // Right edge area
             for (int x = mapWidth - maxEdgeDist; x < mapWidth - minEdgeDist; x += 3)
             {
                 for (int z = minEdgeDist; z < mapHeight - minEdgeDist; z += 3)
@@ -777,9 +741,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return IntVec3.Invalid;
         }
 
-        /// <summary>
-        /// Check if a cell is a valid outing spot
-        /// </summary>
         private bool IsValidOutingSpot(IntVec3 cell, Map map, Pawn organizer)
         {
             if (!cell.InBounds(map))
@@ -792,19 +753,16 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return false;
             }
 
-            // Check for danger
             if (cell.GetDangerFor(organizer, map) != Danger.None)
             {
                 return false;
             }
 
-            // Check if forbidden
             if (cell.IsForbidden(organizer))
             {
                 return false;
             }
 
-            // Check if reachable
             if (!organizer.CanReach(cell, Verse.AI.PathEndMode.OnCell, Danger.Some))
             {
                 return false;
@@ -813,17 +771,12 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return true;
         }
 
-        /// <summary>
-        /// Score a spot based on natural beauty and features
-        /// </summary>
         private float GetSpotScore(IntVec3 cell, Map map, OutingDestinationPool pool)
         {
             float score = 0f;
 
-            // Base beauty score
             score += BeautyUtility.CellBeauty(cell, map);
 
-            // Bonus for nearby plants
             int plantCount = 0;
             foreach (IntVec3 nearbyCell in GenRadial.RadialCellsAround(cell, 5, true))
             {
@@ -838,7 +791,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             }
             score += plantCount * 0.5f;
 
-            // Bonus for nearby water (but not on water)
             foreach (IntVec3 nearbyCell in GenRadial.RadialCellsAround(cell, 3, true))
             {
                 if (nearbyCell.InBounds(map) && nearbyCell.GetTerrain(map).IsWater)
@@ -848,7 +800,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 }
             }
 
-            // Light preference tweaks for pool identity.
             TerrainDef terrain = cell.GetTerrain(map);
             if (pool == OutingDestinationPool.River && IsRiverTerrain(terrain))
             {
@@ -874,9 +825,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return score;
         }
 
-        /// <summary>
-        /// Fallback: find any outdoor spot
-        /// </summary>
         private bool TryFindFallbackSpot(Pawn organizer, out IntVec3 spot)
         {
             return RCellFinder.TryFindRandomSpotJustOutsideColony(organizer, out spot);
@@ -884,7 +832,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
         
         protected override Pawn FindOrganizer(Map map)
         {
-            // Find the oldest child to be the organizer
             List<Pawn> childCandidates = new List<Pawn>();
             
             foreach (Pawn pawn in map.mapPawns.FreeColonistsSpawned)
@@ -907,13 +854,9 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return null;
             }
             
-            // Return the oldest child
             return childCandidates.OrderByDescending(p => p.ageTracker.AgeBiologicalYears).First();
         }
         
-        /// <summary>
-        /// Check if a pawn can be the organizer
-        /// </summary>
         private bool CanBeOrganizer(Pawn pawn)
         {
             if (pawn.Downed || pawn.Dead || !pawn.Spawned)
@@ -931,7 +874,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return false;
             }
             
-            // Check needs
             if (pawn.needs?.food != null && pawn.needs.food.CurLevelPercentage < 0.2f)
             {
                 return false;
@@ -945,9 +887,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return true;
         }
         
-        /// <summary>
-        /// Check if there are enough children for an outing
-        /// </summary>
         private bool HasEnoughChildren(Map map)
         {
             int count = 0;
@@ -967,9 +906,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return false;
         }
         
-        /// <summary>
-        /// Check if a pawn is a child or toddler
-        /// </summary>
         private bool IsChildOrToddler(Pawn pawn)
         {
             if (pawn.DevelopmentalStage.Child())
@@ -985,9 +921,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return false;
         }
         
-        /// <summary>
-        /// Check if a pawn can participate in the outing
-        /// </summary>
         private bool CanParticipate(Pawn pawn)
         {
             if (pawn.Downed || pawn.Dead || !pawn.Spawned)

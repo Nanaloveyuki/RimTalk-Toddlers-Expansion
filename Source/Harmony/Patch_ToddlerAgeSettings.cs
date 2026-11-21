@@ -18,17 +18,25 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			}
 
 			MethodInfo recalculateLifeStageIndex = AccessTools.Method(typeof(Pawn_AgeTracker), "RecalculateLifeStageIndex");
-			if (recalculateLifeStageIndex != null)
+			if (recalculateLifeStageIndex == null)
 			{
-				if (ToddlerAgeSettingsUtility.IsRatkinToddlerAgeAdjustmentLoaded())
-				{
-					Log.Message("[RimTalk_ToddlersExpansion][ToddlerAge] RatkinToddlerAgeAdjustment detected; skipping duplicate RecalculateLifeStageIndex float-age transpiler.");
-				}
-				else
-				{
-					harmony.Patch(recalculateLifeStageIndex, transpiler: new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(RecalculateLifeStageIndex_Transpiler)));
-				}
+				return;
 			}
+
+			HarmonyMethod transpiler = null;
+			if (ToddlerAgeSettingsUtility.IsRatkinToddlerAgeAdjustmentLoaded())
+			{
+				Log.Message("[RimTalk_ToddlersExpansion][ToddlerAge] RatkinToddlerAgeAdjustment detected; skipping duplicate RecalculateLifeStageIndex float-age transpiler.");
+			}
+			else
+			{
+				transpiler = new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(RecalculateLifeStageIndex_Transpiler));
+			}
+
+			harmony.Patch(recalculateLifeStageIndex,
+				prefix: new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(RecalculateLifeStageIndex_Prefix)),
+				postfix: new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(RecalculateLifeStageIndex_Postfix)),
+				transpiler: transpiler);
 		}
 
 		private static bool ToddlerMinAge_Prefix(Pawn __0, ref float __result)
@@ -40,6 +48,19 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 			__result = minAge;
 			return false;
+		}
+
+		private static void RecalculateLifeStageIndex_Prefix(int ___cachedLifeStageIndex, out int __state)
+		{
+			__state = ___cachedLifeStageIndex;
+		}
+
+		private static void RecalculateLifeStageIndex_Postfix(Pawn ___pawn, int ___cachedLifeStageIndex, int __state)
+		{
+			if (___cachedLifeStageIndex != __state)
+			{
+				ToddlerSelfBathGameComponent.NotifyPawnEligibilityChanged(___pawn);
+			}
 		}
 
 		private static IEnumerable<CodeInstruction> RecalculateLifeStageIndex_Transpiler(IEnumerable<CodeInstruction> instructions)

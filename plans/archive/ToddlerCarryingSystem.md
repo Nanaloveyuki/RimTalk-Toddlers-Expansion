@@ -1,5 +1,7 @@
 # 幼儿背负系统 (Toddler Carrying System)
 
+> 早期设计记录。当前版本会保存并恢复背负关系。存档和跨模组接口约束见 [ADR 0001](../../Docs/adr/0001-continue-maintenance-and-refactoring.md)。
+
 ## 概述
 
 幼儿背负系统允许成年人"抱着"幼儿移动，使得商队、访客等场景中的幼儿能够跟随成年人。这解决了幼儿作为独立pawn存在时的移动问题。

@@ -32,7 +32,6 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Patch_FloatMenu_ToddlerToyPlay.Init(harmony);
 			Patch_TravelingLord.Init(harmony);
 			Patch_CarriedToddlerMapEdgeReachability.Init(harmony);
-			// Patch 商队离开时的 duty 分配，确保被背着的幼儿不会获得不合适的 duty
 			Patch_ExitMapDuty.Init(harmony);
 			
 			Patch_ToddlerPrisonerThinkTree.Init(harmony);
@@ -41,17 +40,14 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Patch_ToddlerPlaySafety.Init(harmony);
 			Patch_LearningGiver_NatureRunning.Init(harmony);
 			Patch_ToddlerJobLogging.Init(harmony);
-			// 幼儿洗澡渲染补丁（脱衣服、浴缸中位置调整）
 			Patch_ToddlerBathRendering.Init(harmony);
 			
-			// 幼儿背负系统补丁
 			Patch_ToddlerCarrying.Init(harmony);
 			Patch_ToddlerCarriedDamageFactor.Init(harmony);
 			Patch_ToddlersLocomotionAnimation.Init(harmony);
 			Patch_BePlayedWithJobSafety.Init(harmony);
 			Patch_ToddlerLonelyPlay.Init(harmony);
 			
-			// 幼儿无聊机制补丁
 			Patch_ToddlerBoredom.ApplyPatches(harmony);
 			Patch_ToddlerEatingSpeed.Init(harmony);
 			Patch_ToddlerEatingSafety.Init(harmony);
@@ -65,14 +61,11 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Patch_ToddlersRemoveClothes.Init(harmony);
 			ApplyOptionalPatch(harmony, Patch_HospitalityBedUtilityIdeology.Init);
 			
-			// 婴儿头发渲染补丁（允许婴儿显示头发）
 			Patch_BabyHairRendering.Init(harmony);
 			
-			// Yayo's Animation 兼容性初始化和补丁
 			YayoAnimationCompatUtility.Initialize();
 			YayoAnimationCompatUtility.ApplyPatches(harmony);
 			
-			// 访客幼儿婴儿食品补丁（修复Hospitality mod兼容性）
 			Patch_VisitorToddlerBabyFood.Init(harmony);
 			
 			Log.Message("[RimTalk Toddlers Expansion] Patch initialization finished");

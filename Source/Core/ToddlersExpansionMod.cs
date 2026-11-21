@@ -27,6 +27,7 @@ namespace RimTalk_ToddlersExpansion.Core
 		{
 			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
 			Integration.Toddlers.ChildrenOutingSettingsUtility.ApplyConfiguredRandomSelectionWeight();
+			Integration.Toddlers.ToddlerPlayAnimationUtility.InitializePlayAnimationWorkers();
 			ToddlersExpansionDiagnostics.Run();
 			RimTalkCompatUtility.TryRegisterToddlerVariables();
 			Integration.Toddlers.ToddlerCarryingGameComponent.RegisterGameComponent();

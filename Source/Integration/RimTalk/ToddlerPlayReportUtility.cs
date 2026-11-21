@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimWorld;
 using UnityEngine;
@@ -22,10 +23,8 @@ namespace RimTalk_ToddlersExpansion.Integration.RimTalk
 		private const string OutputRules = "Output only the activity phrase, 1-4 words, no punctuation, no quotes.";
 		private const string SafetyRules = "The activity must be safe, gentle, warm, playful, and age-appropriate for a toddler. Treat buildings, utilities, adult objects, and technical objects as scenery unless they are explicitly toddler toys. Do not lazily convert a nearby object into 'play with that object'. If the scene contains adult or technical objects, use passive observation, imagination, colors, sounds, shadows, shapes, or nearby ground play instead. Prefer ordinary toddler behavior such as crawling, wobbling, giggling, babbling, peekaboo, soft toys, blocks, leaves, shadows, snow, harmless floor play, or playing beside another toddler.";
 
-		private static readonly object LockObj = new object();
-		private static readonly Dictionary<int, int> PendingJobTicks = new Dictionary<int, int>(64);
-		private static readonly Dictionary<int, string> PendingReports = new Dictionary<int, string>(64);
-		private static readonly Dictionary<int, int> LastRequestTickByPawn = new Dictionary<int, int>(64);
+		// Loading a save creates a new Game, which can reuse pawn and job IDs.
+		private static readonly ConditionalWeakTable<Game, ReportSession> Sessions = new ConditionalWeakTable<Game, ReportSession>();
 
 		public static void EnsureReportRequested(Job job, Pawn toddler, Pawn partner, ToddlerPlayReportKind kind)
 		{
@@ -40,7 +39,15 @@ namespace RimTalk_ToddlersExpansion.Integration.RimTalk
 			}
 
 			int jobId = job.loadID;
-			if (jobId < 0 || !TryRegisterPending(jobId, toddler))
+			Game game = Current.Game;
+			if (game == null || jobId < 0)
+			{
+				return;
+			}
+
+			ReportSession session = Sessions.GetValue(game, static _ => new ReportSession());
+			ReportRequest request = session.TryRegister(jobId, toddler.thingIDNumber, Find.TickManager.TicksGame);
+			if (request == null)
 			{
 				return;
 			}
@@ -58,56 +65,26 @@ namespace RimTalk_ToddlersExpansion.Integration.RimTalk
 			bool queued = RimTalkCompatUtility.TryRequestShortText(systemPrompt, userPrompt, response =>
 			{
 				string sanitized = SanitizeResponse(response);
-				if (string.IsNullOrEmpty(sanitized))
-				{
-					ClearPending(jobId);
-					return;
-				}
-
-				string report = string.IsNullOrEmpty(prefix) ? sanitized : prefix + sanitized;
-				lock (LockObj)
-				{
-					if (!PendingJobTicks.ContainsKey(jobId))
-					{
-						return;
-					}
-
-					PendingJobTicks.Remove(jobId);
-					PendingReports[jobId] = report;
-				}
+				string report = string.IsNullOrEmpty(sanitized) ? null : prefix + sanitized;
+				session.Complete(jobId, request, report);
 			});
 
 			if (!queued)
 			{
-				ClearPending(jobId);
+				session.Complete(jobId, request, null);
 			}
 		}
 
 		public static void TryApplyPendingReport(Job job)
 		{
-			if (job == null)
+			if (job == null || job.loadID < 0)
 			{
 				return;
 			}
 
-			int jobId = job.loadID;
-			if (jobId < 0)
-			{
-				return;
-			}
-
-			string report;
-			lock (LockObj)
-			{
-				if (!PendingReports.TryGetValue(jobId, out report))
-				{
-					return;
-				}
-
-				PendingReports.Remove(jobId);
-			}
-
-			if (!string.IsNullOrWhiteSpace(report))
+			Game game = Current.Game;
+			if (game != null && Sessions.TryGetValue(game, out ReportSession session)
+				&& session.TryTakeReport(job.loadID, out string report))
 			{
 				job.reportStringOverride = report;
 			}
@@ -117,53 +94,11 @@ namespace RimTalk_ToddlersExpansion.Integration.RimTalk
 
 		public static void CancelJob(Job job)
 		{
-			if (job == null)
+			Game game = Current.Game;
+			if (job != null && job.loadID >= 0 && game != null
+				&& Sessions.TryGetValue(game, out ReportSession session))
 			{
-				return;
-			}
-
-			ClearPending(job.loadID);
-		}
-
-		private static bool TryRegisterPending(int jobId, Pawn toddler)
-		{
-			if (jobId < 0)
-			{
-				return false;
-			}
-
-			int now = Find.TickManager.TicksGame;
-			lock (LockObj)
-			{
-				if (PendingJobTicks.ContainsKey(jobId) || PendingReports.ContainsKey(jobId))
-				{
-					return false;
-				}
-
-				int pawnId = toddler.thingIDNumber;
-				if (LastRequestTickByPawn.TryGetValue(pawnId, out int lastTick) && now - lastTick < RequestCooldownTicks)
-				{
-					return false;
-				}
-
-				LastRequestTickByPawn[pawnId] = now;
-				PendingJobTicks[jobId] = now;
-			}
-
-			return true;
-		}
-
-		private static void ClearPending(int jobId)
-		{
-			if (jobId < 0)
-			{
-				return;
-			}
-
-			lock (LockObj)
-			{
-				PendingJobTicks.Remove(jobId);
-				PendingReports.Remove(jobId);
+				session.Cancel(job.loadID);
 			}
 		}
 
@@ -356,6 +291,73 @@ namespace RimTalk_ToddlersExpansion.Integration.RimTalk
 				line = line.Substring(0, 60).Trim();
 			}
 			return line;
+		}
+
+		private sealed class ReportSession
+		{
+			private readonly object _sync = new object();
+			private readonly Dictionary<int, ReportRequest> _requests = new Dictionary<int, ReportRequest>(64);
+			private readonly Dictionary<int, int> _lastRequestTicks = new Dictionary<int, int>(64);
+
+			public ReportRequest TryRegister(int jobId, int pawnId, int now)
+			{
+				lock (_sync)
+				{
+					if (_requests.ContainsKey(jobId)
+						|| (_lastRequestTicks.TryGetValue(pawnId, out int lastTick) && now - lastTick < RequestCooldownTicks))
+					{
+						return null;
+					}
+
+					ReportRequest request = new ReportRequest();
+					_requests.Add(jobId, request);
+					_lastRequestTicks[pawnId] = now;
+					return request;
+				}
+			}
+
+			public void Complete(int jobId, ReportRequest request, string report)
+			{
+				lock (_sync)
+				{
+					// A callback can arrive after the same job canceled and queued a new request.
+					if (!_requests.TryGetValue(jobId, out ReportRequest pending) || pending != request || pending.Report != null)
+					{
+						return;
+					}
+
+					if (report == null)
+					{
+						_requests.Remove(jobId);
+					}
+					else
+					{
+						pending.Report = report;
+					}
+				}
+			}
+
+			public bool TryTakeReport(int jobId, out string report)
+			{
+				lock (_sync)
+				{
+					report = _requests.TryGetValue(jobId, out ReportRequest request) ? request.Report : null;
+					return report != null && _requests.Remove(jobId);
+				}
+			}
+
+			public void Cancel(int jobId)
+			{
+				lock (_sync)
+				{
+					_requests.Remove(jobId);
+				}
+			}
+		}
+
+		private sealed class ReportRequest
+		{
+			public string Report;
 		}
 	}
 }

@@ -174,6 +174,35 @@ using Verse;
 			return pawn?.pather?.MovingNow == true;
 		}
 
+		internal static void InitializePlayAnimationWorkers()
+		{
+			// Vanilla lazily creates workers in a shared dictionary that parallel pawn rendering can access.
+			foreach (AnimationDef animation in DefDatabase<AnimationDef>.AllDefsListForReading)
+			{
+				if (IsManagedPlayAnimation(animation))
+				{
+					InitializeAnimationParts(animation.keyframeParts?.Values);
+					InitializeAnimationParts(animation.curveParts?.Values);
+				}
+			}
+		}
+
+		private static void InitializeAnimationParts(IEnumerable<AnimationPart> parts)
+		{
+			if (parts == null)
+			{
+				return;
+			}
+
+			foreach (AnimationPart part in parts)
+			{
+				if (part != null)
+				{
+					GenWorker<BaseAnimationWorker>.Get(part.WorkerType);
+				}
+			}
+		}
+
 		private static bool CanUseManagedPlayAnimations(Pawn pawn)
 		{
 			return pawn != null

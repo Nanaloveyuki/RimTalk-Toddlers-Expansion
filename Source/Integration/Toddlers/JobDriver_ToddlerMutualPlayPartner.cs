@@ -11,9 +11,21 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	{
 		private const TargetIndex InitiatorInd = TargetIndex.A;
 		private const int MaxPartnerDistance = 6;
+		private const int PlayToilIndex = 1;
 		private AnimationDef _playAnimation;
+		private bool _restorePlayAnimation;
 
 		private Pawn Initiator => TargetA.Thing as Pawn;
+
+		public override void ExposeData()
+		{
+			base.ExposeData();
+			Scribe_Defs.Look(ref _playAnimation, "playAnimation");
+			if (Scribe.mode == LoadSaveMode.PostLoadInit)
+			{
+				_restorePlayAnimation = CurToilIndex == PlayToilIndex;
+			}
+		}
 
 		public override bool TryMakePreToilReservations(bool errorOnFailed)
 		{
@@ -27,7 +39,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			this.FailOn(() => Initiator == null || Initiator.Downed || Initiator.Drafted || ToddlerMentalStateUtility.HasBlockingMentalState(Initiator));
 			this.FailOn(() => Initiator?.Map != pawn.Map);
 
-			// Step 1: Wait for initiator to arrive (stop moving and stay in place)
 			Toil waitForInitiator = ToilMaker.MakeToil("WaitForInitiator");
 			waitForInitiator.initAction = () =>
 			{
@@ -43,7 +54,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 				pawn.rotationTracker.FaceCell(Initiator.Position);
 
-				// Check if initiator has arrived close enough, then proceed to next toil
 				if (pawn.Position.InHorDistOf(Initiator.Position, 2))
 				{
 					ReadyForNextToil();
@@ -53,24 +63,16 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			waitForInitiator.defaultCompleteMode = ToilCompleteMode.Never;
 			yield return waitForInitiator;
 
-			// Step 2: Play together
 			Toil play = ToilMaker.MakeToil("ToddlerMutualPlayPartner");
-			play.initAction = () =>
-			{
-				if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
-				{
-					_playAnimation = nativeAnimation;
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-				else if (!YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
-				{
-					_playAnimation = ToddlerPlayAnimationUtility.GetSharedMutualPlayAnimation(pawn, Initiator);
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-			};
+			play.initAction = InitializePlayAnimation;
 			play.tickAction = () =>
 			{
-				if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
+				if (_restorePlayAnimation)
+				{
+					_restorePlayAnimation = false;
+					InitializePlayAnimation();
+				}
+				else if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
 				{
 					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
 				}
@@ -101,6 +103,24 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			play.AddFinishAction(() => ToddlerPlayAnimationUtility.ClearAnimation(pawn, _playAnimation));
 
 			yield return play;
+		}
+
+		private void InitializePlayAnimation()
+		{
+			if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
+			{
+				_playAnimation = nativeAnimation;
+			}
+			else if (YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
+			{
+				_playAnimation = null;
+			}
+			else
+			{
+				_playAnimation ??= ToddlerPlayAnimationUtility.GetSharedMutualPlayAnimation(pawn, Initiator);
+			}
+
+			ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
 		}
 
 		private bool IsInitiatorCommitted(bool requireReachability)

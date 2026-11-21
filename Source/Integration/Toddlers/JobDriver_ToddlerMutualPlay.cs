@@ -11,13 +11,27 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	public sealed class JobDriver_ToddlerMutualPlay : JobDriver
 	{
 		private const TargetIndex PartnerInd = TargetIndex.A;
+		private const int StartPartnerToilIndex = 0;
+		private const int PlayToilIndex = 2;
 
 		private float _initialPlayLevel = -1f;
 		private bool _partnerJobStarted;
-		private bool _playStarted;
+		private bool _restorePlayPresentation;
 		private AnimationDef _playAnimation;
 
 		private Pawn Partner => TargetA.Thing as Pawn;
+
+		public override void ExposeData()
+		{
+			base.ExposeData();
+			Scribe_Values.Look(ref _initialPlayLevel, "initialPlayLevel", -1f);
+			Scribe_Values.Look(ref _partnerJobStarted, "partnerJobStarted");
+			Scribe_Defs.Look(ref _playAnimation, "playAnimation");
+			if (Scribe.mode == LoadSaveMode.PostLoadInit)
+			{
+				_restorePlayPresentation = CurToilIndex == PlayToilIndex;
+			}
+		}
 
 		public override bool TryMakePreToilReservations(bool errorOnFailed)
 		{
@@ -43,9 +57,9 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			this.FailOn(() => pawn.Downed || pawn.Drafted || ToddlerMentalStateUtility.HasBlockingMentalState(pawn));
 			this.FailOn(() => Partner == null || Partner.Downed || Partner.Drafted || ToddlerMentalStateUtility.HasBlockingMentalState(Partner));
 			this.FailOn(() => Partner?.Map != pawn.Map);
-			this.FailOn(() => _partnerJobStarted && !IsPartnerStillCommitted());
+			// Older saves retain the toil index, so walking and playing still require a committed partner.
+			this.FailOn(() => (_partnerJobStarted || CurToilIndex > StartPartnerToilIndex) && !IsPartnerStillCommitted());
 
-			// Step 1: Start partner job first (partner will stop moving and wait)
 			Toil startPartnerJob = ToilMaker.MakeToil("StartPartnerJob");
 			startPartnerJob.initAction = () =>
 			{
@@ -61,32 +75,22 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			startPartnerJob.defaultCompleteMode = ToilCompleteMode.Instant;
 			yield return startPartnerJob;
 
-			// Step 2: Walk to partner's position
 			yield return Toils_Goto.GotoThing(PartnerInd, PathEndMode.Touch);
 
-			// Step 3: Play together
 			Toil play = ToilMaker.MakeToil("ToddlerMutualPlay");
 			play.initAction = () =>
 			{
-				_playStarted = true;
-				if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
-				{
-					_playAnimation = nativeAnimation;
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-				else if (!YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
-				{
-					_playAnimation = ToddlerPlayAnimationUtility.GetSharedMutualPlayAnimation(pawn, Partner);
-					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
-				}
-
 				_initialPlayLevel = GetPlayLevel(pawn);
-				ToddlerPlayReportUtility.EnsureReportRequested(job, pawn, Partner, ToddlerPlayReportKind.MutualPlay);
-				ToddlerPlayReportUtility.TryApplyPendingReport(job);
+				InitializePlayPresentation();
 			};
 			play.tickAction = () =>
 			{
-				if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
+				if (_restorePlayPresentation)
+				{
+					_restorePlayPresentation = false;
+					InitializePlayPresentation();
+				}
+				else if (_playAnimation != null && pawn.Drawer?.renderer?.CurAnimation != _playAnimation)
 				{
 					ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
 				}
@@ -118,7 +122,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			AddFinishAction(condition =>
 			{
 				ToddlerPlayReportUtility.CancelJob(job);
-				if (condition != JobCondition.Succeeded || !_playStarted)
+				if (condition != JobCondition.Succeeded || CurToilIndex < PlayToilIndex)
 				{
 					StartFailureCooldown(Partner);
 					return;
@@ -137,6 +141,26 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			});
 
 			yield return play;
+		}
+
+		private void InitializePlayPresentation()
+		{
+			if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
+			{
+				_playAnimation = nativeAnimation;
+			}
+			else if (YayoAnimationCompatUtility.ShouldUseYayoPlayAnimation(pawn))
+			{
+				_playAnimation = null;
+			}
+			else
+			{
+				_playAnimation ??= ToddlerPlayAnimationUtility.GetSharedMutualPlayAnimation(pawn, Partner);
+			}
+
+			ToddlerPlayAnimationUtility.TryApplyAnimation(pawn, _playAnimation);
+			ToddlerPlayReportUtility.EnsureReportRequested(job, pawn, Partner, ToddlerPlayReportKind.MutualPlay);
+			ToddlerPlayReportUtility.TryApplyPendingReport(job);
 		}
 
 		private bool TryStartPartnerJob()
