@@ -171,19 +171,4 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		}
 	}
 
-	public static class LanguageLearningUtility
-	{
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<LanguageLearningBootstrapComponent>() == null)
-			{
-				Current.Game.components.Add(new LanguageLearningBootstrapComponent(Current.Game));
-			}
-		}
-	}
 }

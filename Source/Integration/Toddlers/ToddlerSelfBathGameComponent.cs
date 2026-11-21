@@ -286,19 +286,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 		}
 
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null || !IsHygieneAvailable)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<ToddlerSelfBathGameComponent>() == null)
-			{
-				Current.Game.components.Add(new ToddlerSelfBathGameComponent(Current.Game));
-			}
-		}
-
 		public static bool IsEligibleSelfBathPawn(Pawn pawn)
 		{
 			if (pawn == null || pawn.Map == null || pawn.Downed || pawn.Drafted || ToddlerMentalStateUtility.HasBlockingMentalState(pawn))

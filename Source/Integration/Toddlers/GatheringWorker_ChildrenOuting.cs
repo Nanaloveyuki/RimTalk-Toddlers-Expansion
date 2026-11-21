@@ -82,7 +82,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return false;
             }
 
-            return TryFindGatherSpot(organizer, out _);
+            return HasGatherSpot(organizer);
         }
         
         public override bool TryExecute(Map map, Pawn organizer = null)
@@ -170,6 +170,28 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
         protected override bool TryFindGatherSpot(Pawn organizer, out IntVec3 spot)
         {
             return TryFindGatherSpotFromEnabledPools(organizer, out spot, out _);
+        }
+
+        private bool HasGatherSpot(Pawn organizer)
+        {
+            Map map = organizer.Map;
+            if (map == null)
+            {
+                return false;
+            }
+
+            foreach (OutingDestinationPool pool in GetEnabledDestinationPools())
+            {
+                foreach (IntVec3 cell in CollectCandidateSpotsForPool(pool, map))
+                {
+                    if (IsValidOutingSpot(cell, map, organizer))
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return TryFindFallbackSpot(organizer, out _);
         }
 
         private bool TryFindGatherSpotFromEnabledPools(Pawn organizer, out IntVec3 spot, out OutingDestinationPool selectedPool)
@@ -422,6 +444,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return candidates;
             }
 
+            var keywordMatches = new Dictionary<ThingDef, bool>();
             foreach (Thing thing in things)
             {
                 if (thing is not ThingWithComps thingWithComps || !thing.Spawned)
@@ -429,7 +452,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                     continue;
                 }
 
-                if (!IsPotentialLandmarkThing(thingWithComps))
+                if (!IsPotentialLandmarkThing(thingWithComps, keywordMatches))
                 {
                     continue;
                 }
@@ -593,20 +616,23 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return true;
         }
 
-        private bool IsPotentialLandmarkThing(ThingWithComps thing)
+        private bool IsPotentialLandmarkThing(ThingWithComps thing, Dictionary<ThingDef, bool> keywordMatches)
         {
-            if (thing?.def == null)
+            ThingDef definition = thing.def;
+            if (definition == null)
             {
                 return false;
             }
 
-            string defName = thing.def.defName ?? string.Empty;
-            string label = thing.def.label ?? string.Empty;
-            string className = thing.def.thingClass?.Name ?? string.Empty;
+            if (!keywordMatches.TryGetValue(definition, out bool matches))
+            {
+                matches = ContainsAnyKeyword(definition.defName)
+                    || ContainsAnyKeyword(definition.label)
+                    || ContainsAnyKeyword(definition.thingClass?.Name);
+                keywordMatches.Add(definition, matches);
+            }
 
-            if (ContainsAnyKeyword(defName)
-                || ContainsAnyKeyword(label)
-                || ContainsAnyKeyword(className))
+            if (matches)
             {
                 return true;
             }

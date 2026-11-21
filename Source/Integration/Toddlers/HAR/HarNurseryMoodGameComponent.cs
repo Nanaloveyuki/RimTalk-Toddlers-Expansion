@@ -353,19 +353,4 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers.HAR
 		}
 	}
 
-	public static class HarNurseryMoodUtility
-	{
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<HarNurseryMoodGameComponent>() == null)
-			{
-				Current.Game.components.Add(new HarNurseryMoodGameComponent(Current.Game));
-			}
-		}
-	}
 }

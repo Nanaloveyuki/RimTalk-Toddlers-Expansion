@@ -419,7 +419,7 @@ namespace RimTalk_ToddlersExpansion.Integration.YayoAnimation
 
 		public static void TrackSafeFallbackPawn(Pawn pawn)
 		{
-			if (!IsRelevantSmallPawnCandidate(pawn))
+			if (!IsYayoAnimationLoaded || !IsRelevantSmallPawnCandidate(pawn))
 			{
 				return;
 			}
@@ -628,7 +628,7 @@ namespace RimTalk_ToddlersExpansion.Integration.YayoAnimation
 			}
 
 			if (pawn.CurJobDef == ToddlersExpansionJobDefOf.RimTalk_ToddlerMutualPlayJob
-				&& pawn.jobs?.curDriver?.CurToilString == "GotoThing")
+				&& pawn.jobs?.curDriver?.CurToilString == "ApproachMutualPlayCell")
 			{
 				return false;
 			}

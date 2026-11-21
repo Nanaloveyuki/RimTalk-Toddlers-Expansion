@@ -87,9 +87,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				};
 				playToil.tickAction = () =>
 				{
-					// 更新动画
-					CarriedPlayAnimationTracker.UpdateAnimation(pawn, Toddler);
-					
 					// 检查是否需要切换朝向
 					int currentTick = Find.TickManager.TicksGame;
 					if (currentTick - lastRotationTick >= TicksPerRotation)

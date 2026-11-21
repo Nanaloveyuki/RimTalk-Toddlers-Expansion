@@ -63,22 +63,14 @@ namespace RimTalk_ToddlersExpansion
             return GetBoredomValue(category) >= ToddlersExpansionSettings.boredomMaxCap;
         }
 
-        // The weight parameter remains part of the public API. Boredom uses the configured increment.
         public void RecordPlay(ToddlerPlayCategory category, float weight = 1.0f)
         {
-            if (category == ToddlerPlayCategory.None)
+            if (category == ToddlerPlayCategory.None || weight <= 0f || !float.IsFinite(weight))
                 return;
 
-            if (_boredomValues.ContainsKey(category))
-            {
-                _boredomValues[category] = Math.Min(_boredomValues[category] + ToddlersExpansionSettings.boredomIncreasePerActivity,
-                                                    ToddlersExpansionSettings.boredomMaxCap);
-            }
-            else
-            {
-                _boredomValues[category] = Math.Min(ToddlersExpansionSettings.boredomIncreasePerActivity,
-                                                    ToddlersExpansionSettings.boredomMaxCap);
-            }
+            float increment = ToddlersExpansionSettings.boredomIncreasePerActivity * weight;
+            _boredomValues[category] = Math.Min(GetBoredomValue(category) + increment,
+                                                ToddlersExpansionSettings.boredomMaxCap);
 
             if (Prefs.DevMode)
             {
@@ -92,7 +84,7 @@ namespace RimTalk_ToddlersExpansion
 
             var category = ToddlerPlayRegistry.GetCategory(jobDef);
 
-            RecordPlay(category, 1.0f);
+            RecordPlay(category, ToddlerPlayRegistry.GetBoredomWeight(jobDef));
         }
 
         public void Tick()

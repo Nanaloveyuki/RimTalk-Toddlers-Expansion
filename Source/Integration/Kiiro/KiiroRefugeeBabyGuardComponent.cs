@@ -88,19 +88,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Kiiro
 
 	public static class KiiroRefugeeBabyGuardUtility
 	{
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<KiiroRefugeeBabyGuardComponent>() == null)
-			{
-				Current.Game.components.Add(new KiiroRefugeeBabyGuardComponent(Current.Game));
-			}
-		}
-
 		public static void MarkOrphanPawn(Pawn pawn)
 		{
 			KiiroRefugeeBabyGuardComponent component = KiiroRefugeeBabyGuardComponent.Get();

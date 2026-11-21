@@ -193,19 +193,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				< ToddlerCarryingUtility.GetMaxCarryCapacity(carrier);
 		}
 
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<ToddlerCarryingGameComponent>() == null)
-			{
-				Current.Game.components.Add(new ToddlerCarryingGameComponent(Current.Game));
-			}
-		}
-
 		private void MaintainActiveCarryingRelations()
 		{
 			if (!ToddlerCarryingTracker.HasActiveRelations && !_needsCarryProtectionResync)

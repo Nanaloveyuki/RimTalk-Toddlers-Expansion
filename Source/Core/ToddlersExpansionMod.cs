@@ -30,14 +30,6 @@ namespace RimTalk_ToddlersExpansion.Core
 			Integration.Toddlers.ToddlerPlayAnimationUtility.InitializePlayAnimationWorkers();
 			ToddlersExpansionDiagnostics.Run();
 			RimTalkCompatUtility.TryRegisterToddlerVariables();
-			Integration.Toddlers.ToddlerCarryingGameComponent.RegisterGameComponent();
-			Integration.Toddlers.MidnightSnackUtility.RegisterGameComponent();
-			Integration.Toddlers.ToddlerAgeSettingsGameComponent.RegisterGameComponent();
-			Integration.Toddlers.LanguageLearningUtility.RegisterGameComponent();
-			Integration.Toddlers.ToddlerSelfBathUtility.RegisterGameComponent();
-			Integration.Toddlers.HAR.HarNurseryMoodUtility.RegisterGameComponent();
-			Integration.YayoAnimation.YayoAnimationSafeFallbackUtility.RegisterGameComponent();
-			Integration.Kiiro.KiiroRefugeeBabyGuardUtility.RegisterGameComponent();
 		}
 
 		public override void DoSettingsWindowContents(Rect inRect)

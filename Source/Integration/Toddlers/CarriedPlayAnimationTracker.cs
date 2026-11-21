@@ -49,11 +49,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			};
 		}
 
-		public static void UpdateAnimation(Pawn carrier, Pawn toddler)
-		{
-			// Rendering derives the animation state from the start tick.
-		}
-
 		public static void StopAnimation(Pawn carrier, Pawn toddler)
 		{
 			if (carrier != null)

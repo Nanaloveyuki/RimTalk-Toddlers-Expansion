@@ -51,11 +51,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				// 开始动画
 				CarriedPlayAnimationTracker.StartTossUpAnimation(pawn, Toddler);
 			};
-			playToil.tickAction = () =>
-			{
-				// 更新动画
-				CarriedPlayAnimationTracker.UpdateAnimation(pawn, Toddler);
-			};
 			playToil.defaultCompleteMode = ToilCompleteMode.Delay;
 			playToil.defaultDuration = AnimationDuration;
 			playToil.handlingFacing = true;

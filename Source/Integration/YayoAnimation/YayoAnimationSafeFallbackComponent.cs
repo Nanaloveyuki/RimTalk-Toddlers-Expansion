@@ -51,7 +51,8 @@ namespace RimTalk_ToddlersExpansion.Integration.YayoAnimation
 			}
 
 			_nextSyncTick = now + SyncIntervalTicks;
-			if (now >= _nextFullRescanTick)
+			bool fullRescan = now >= _nextFullRescanTick;
+			if (fullRescan)
 			{
 				_nextFullRescanTick = now + FullRescanIntervalTicks;
 				_nextCurrentMapScanTick = now + CurrentMapScanIntervalTicks;
@@ -63,33 +64,29 @@ namespace RimTalk_ToddlersExpansion.Integration.YayoAnimation
 				ScanMapCandidates(Find.CurrentMap);
 			}
 
-			SyncTrackedPawnsOnCurrentMap();
+			SyncTrackedPawns(fullRescan);
 		}
 
-		private void SyncTrackedPawnsOnCurrentMap()
+		private void SyncTrackedPawns(bool fullRescan)
 		{
 			Map currentMap = Find.CurrentMap;
-			if (currentMap == null)
-			{
-				return;
-			}
-
 			YayoAnimationCompatUtility.CopyTrackedSafeFallbackPawnsTo(_trackedPawnsBuffer);
 			for (int i = 0; i < _trackedPawnsBuffer.Count; i++)
 			{
 				Pawn pawn = _trackedPawnsBuffer[i];
-				if (pawn == null || pawn.Map != currentMap)
-				{
-					continue;
-				}
-
-				if (!YayoAnimationCompatUtility.ShouldKeepSafeFallbackPawnTracked(pawn))
+				Map pawnMap = pawn?.Map;
+				bool onCurrentMap = pawnMap != null && pawnMap == currentMap;
+				bool keepTracked = onCurrentMap || fullRescan
+					? YayoAnimationCompatUtility.ShouldKeepSafeFallbackPawnTracked(pawn)
+					: YayoAnimationCompatUtility.IsRelevantSmallPawnCandidate(pawn);
+				if (!keepTracked)
 				{
 					YayoAnimationCompatUtility.UntrackSafeFallbackPawn(pawn);
-					continue;
 				}
-
-				YayoAnimationCompatUtility.SyncSafeNativePlayAnimation(pawn);
+				else if (onCurrentMap)
+				{
+					YayoAnimationCompatUtility.SyncSafeNativePlayAnimation(pawn);
+				}
 			}
 
 			_trackedPawnsBuffer.Clear();
@@ -125,22 +122,6 @@ namespace RimTalk_ToddlersExpansion.Integration.YayoAnimation
 				}
 
 				YayoAnimationCompatUtility.TrackSafeFallbackPawn(pawn);
-			}
-		}
-	}
-
-	public static class YayoAnimationSafeFallbackUtility
-	{
-		public static void RegisterGameComponent()
-		{
-			if (Current.Game == null)
-			{
-				return;
-			}
-
-			if (Current.Game.GetComponent<YayoAnimationSafeFallbackComponent>() == null)
-			{
-				Current.Game.components.Add(new YayoAnimationSafeFallbackComponent(Current.Game));
 			}
 		}
 	}
