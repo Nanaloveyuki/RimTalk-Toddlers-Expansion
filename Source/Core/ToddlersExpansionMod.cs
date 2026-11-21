@@ -17,6 +17,7 @@ namespace RimTalk_ToddlersExpansion.Core
 
 		public ToddlersExpansionMod(ModContentPack content) : base(content)
 		{
+			LegacyModSettingsMigration.CopyIfMissing(content.FolderName, nameof(ToddlersExpansionMod));
 			Settings = GetSettings<ToddlersExpansionSettings>();
 
 			HarmonyBootstrap.Init();

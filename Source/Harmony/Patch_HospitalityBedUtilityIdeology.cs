@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
@@ -32,7 +33,8 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			MethodInfo ideologyMethod = AccessTools.Method(
 				bedUtilityType,
 				"Ideology_GetFulfillment",
-				new[] { typeof(Building_Bed), typeof(Pawn) });
+				new[] { typeof(Building_Bed), typeof(Pawn), typeof(int), typeof(HashSet<ThingDef>).MakeByRefType() })
+				?? AccessTools.Method(bedUtilityType, "Ideology_GetFulfillment", new[] { typeof(Building_Bed), typeof(Pawn) });
 			if (ideologyMethod == null || ideologyMethod.ReturnType != typeof(int))
 			{
 				return;

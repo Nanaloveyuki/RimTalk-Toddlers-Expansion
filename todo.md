@@ -14,11 +14,11 @@
 
 ## 兼容性与验证
 
-- [ ] 验证 1.6 冻结程序集加载共享 Def、补丁和语言。用正常 UI 验证 1.7 原版换装后的模组列表提示和备份存档读档。
-- [ ] 在模组元数据标记原版与 Continue 版互斥。检查安装目录变化时的设置迁移，包含独立 API 配置。
-- [ ] 用带自定义婴儿生命阶段的 HAR 种族复测幼儿起始年龄设置，明确设置适用范围。
-- [ ] 在 Prison Extra Expanded 项目补充对 Continue 包名的加载顺序约束。重构背负时复测 Lead Your Pets 使用的背负接口。
-- [ ] 复测 RimTalk、Interaction Bubbles、Yayo、Dubs Bad Hygiene 和 Hospitality 各自缺席和启用的路径，尤其是模组更新后补丁只注册了一部分的情况。
+- [x] 在 1.6.4871 验证冻结程序集、共享 Def、补丁和简体中文。用 1.7 原版 UI 确认换版提示，再读取并另存备份存档。
+- [x] 标记原版与 Continue 互斥。1.7 自动复制旧目录对应的设置和独立 API 配置，保留已存在的 Continue 设置。
+- [x] 用标准生命阶段和自定义婴儿生命阶段的 HAR 种族复测幼儿起始年龄，已在 README 说明适用范围。
+- [x] 在 Prison Extra Expanded 补充 Continue 的加载顺序约束，并实机验证 Lead Your Pets 的挂载补丁和背负接口。
+- [x] 实机复测 RimTalk、Interaction Bubbles、Yayo、Dubs Bad Hygiene 完整版和 Lite、Hospitality。适配 Hospitality 1.2.0 床位评分的新签名，并模拟 RimTalk 部分接口变更。
 
 ## 性能与维护
 

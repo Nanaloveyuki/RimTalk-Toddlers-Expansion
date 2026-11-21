@@ -2,8 +2,9 @@
 <ModMetaData>
 
 	<packageId>cj.RimtalkToddlersExpansion.continue</packageId>
-	<name>RimTalk - Expand Toddlers</name>
+	<name>RimTalk - Expand Toddlers (Continue)</name>
 	<author>changlusss</author>
+	<modVersion>1.0.0</modVersion>
 
 	<description>
 	Expanded toddler play, care, and family interactions. RimTalk and Interaction Bubbles are optional. Standalone LLM activity text is available without RimTalk.
@@ -40,7 +41,7 @@
 	</forceLoadAfter>
 
 	<incompatibleWith>
-		<!-- No known incompatibilities -->
+		<li>cj.rimtalk.toddlers</li>
 	</incompatibleWith>
 
 </ModMetaData>

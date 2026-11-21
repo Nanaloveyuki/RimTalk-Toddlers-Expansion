@@ -7,7 +7,10 @@
 - 需要生物科技（Biotech）DLC、Harmony 和 Toddlers。把本模组排在 Harmony 和 Toddlers 之后。
 - RimTalk 和 Interaction Bubbles 可选。启用其中任意一个时，把它排在本模组之前。
 - 支持 RimWorld 1.6 和 1.7。1.7 持续维护，已搭配 Toddlers 1.6 验证启动。RimWorld 1.6 沿用原版。
-- 从原版换到 Continue 版时，先备份存档，再停用原版并启用 Continue 版。读档时可能看到模组列表变更提示。如果安装目录变了，请检查模组设置，按需重新配置独立 API。
+- 从原版换到 Continue 版时，先备份存档，再停用原版并启用 Continue 版。读档会显示模组列表变更，确认后即可继续。两个版本包含同名 Def，须择一启用。
+- RimWorld 1.7 首次载入 Continue 时，若新目录没有设置文件，会复制已安装原版的设置，包括独立 API 配置。已卸载原版时也会查找原 Steam 工坊目录 `3659064387` 对应的设置。RimWorld 1.6 或手动更名其他安装目录时，可在游戏关闭后把 `Config/Mod_<旧目录名>_ToddlersExpansionMod.xml` 复制为 `Config/Mod_<新目录名>_ToddlersExpansionMod.xml`，并保留已有的新设置。
+
+幼儿起始年龄设置适用于采用标准婴儿、幼儿和儿童生命阶段的种族，包括符合条件的 HAR 种族。自定义婴儿生命阶段、儿童起始年龄或由其他模组管理的年龄表沿用其自身规则。
 
 ## 玩法
 
