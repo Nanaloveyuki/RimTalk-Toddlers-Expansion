@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Integration.RimTalk;
 using Verse;
 
 namespace RimTalk_ToddlersExpansion.Harmony
@@ -18,17 +19,28 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		public static void Init(HarmonyLib.Harmony harmony)
 		{
+			if (!RimTalkCompatUtility.IsRimTalkActive)
+			{
+				return;
+			}
+
 			Type pawnUtilType = AccessTools.TypeByName(PawnUtilTypeName);
 			if (pawnUtilType == null)
 			{
 				return;
 			}
 
-			Type pawnSetType = typeof(HashSet<Pawn>);
-			MethodInfo[] methods = pawnUtilType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-			for (int i = 0; i < methods.Length; i++)
+			foreach (MethodInfo target in FindDecorateTextTargets(pawnUtilType))
 			{
-				MethodInfo method = methods[i];
+				_getDecoratedName = ResolveGetDecoratedName();
+				harmony.Patch(target, finalizer: new HarmonyMethod(typeof(Patch_RimTalkDecorateTextCompatibility), nameof(DecorateText_Finalizer)));
+			}
+		}
+
+		private static IEnumerable<MethodInfo> FindDecorateTextTargets(Type pawnUtilType)
+		{
+			foreach (MethodInfo method in pawnUtilType.GetMethods(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic))
+			{
 				if (method.Name != "DecorateText" || method.ReturnType != typeof(string))
 				{
 					continue;
@@ -37,14 +49,13 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				ParameterInfo[] parameters = method.GetParameters();
 				if ((parameters.Length != 2 && parameters.Length != 3)
 					|| parameters[0].ParameterType != typeof(string)
-					|| parameters[1].ParameterType != pawnSetType
+					|| parameters[1].ParameterType != typeof(HashSet<Pawn>)
 					|| (parameters.Length == 3 && parameters[2].ParameterType != typeof(Pawn)))
 				{
 					continue;
 				}
 
-				_getDecoratedName = ResolveGetDecoratedName();
-				harmony.Patch(method, finalizer: new HarmonyMethod(typeof(Patch_RimTalkDecorateTextCompatibility), nameof(DecorateText_Finalizer)));
+				yield return method;
 			}
 		}
 

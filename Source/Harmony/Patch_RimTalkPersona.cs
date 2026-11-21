@@ -30,8 +30,8 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				return;
 			}
 
-			MethodInfo target = AccessTools.Method(personaType, "GetOrAddNew", new[] { typeof(Pawn) });
-			if (target == null || !personaType.IsAssignableFrom(target.ReturnType) || target.ContainsGenericParameters)
+			MethodInfo target = FindPersonaTarget(personaType);
+			if (target == null)
 			{
 				return;
 			}
@@ -46,6 +46,14 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			MethodInfo prefix = AccessTools.Method(typeof(Patch_RimTalkPersona), nameof(GetOrAddNew_Prefix));
 			MethodInfo postfix = AccessTools.Method(typeof(Patch_RimTalkPersona), nameof(GetOrAddNew_Postfix));
 			harmony.Patch(target, prefix: new HarmonyMethod(prefix), postfix: new HarmonyMethod(postfix));
+		}
+
+		private static MethodInfo FindPersonaTarget(Type personaType)
+		{
+			MethodInfo target = AccessTools.Method(personaType, "GetOrAddNew", new[] { typeof(Pawn) });
+			return target != null && personaType.IsAssignableFrom(target.ReturnType) && !target.ContainsGenericParameters
+				? target
+				: null;
 		}
 
 		private static FieldInfo GetWritableInstanceField(Type owner, string name, Type fieldType)

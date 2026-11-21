@@ -20,21 +20,23 @@ namespace RimTalk_ToddlersExpansion.Core
 			Settings = GetSettings<ToddlersExpansionSettings>();
 
 			HarmonyBootstrap.Init();
-			LongEventHandler.ExecuteWhenFinished(() =>
-			{
-				Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
-				Integration.Toddlers.ChildrenOutingSettingsUtility.ApplyConfiguredRandomSelectionWeight();
-				ToddlersExpansionDiagnostics.Run();
-				RimTalkCompatUtility.TryRegisterToddlerVariables();
-				Integration.Toddlers.ToddlerCarryingGameComponent.RegisterGameComponent();
-				Integration.Toddlers.MidnightSnackUtility.RegisterGameComponent();
-				Integration.Toddlers.ToddlerAgeSettingsGameComponent.RegisterGameComponent();
-				Integration.Toddlers.LanguageLearningUtility.RegisterGameComponent();
-				Integration.Toddlers.ToddlerSelfBathUtility.RegisterGameComponent();
-				Integration.Toddlers.HAR.HarNurseryMoodUtility.RegisterGameComponent();
-				Integration.YayoAnimation.YayoAnimationSafeFallbackUtility.RegisterGameComponent();
-				Integration.Kiiro.KiiroRefugeeBabyGuardUtility.RegisterGameComponent();
-			});
+			LongEventHandler.ExecuteWhenFinished(InitializeAfterDefsLoaded);
+		}
+
+		private static void InitializeAfterDefsLoaded()
+		{
+			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
+			Integration.Toddlers.ChildrenOutingSettingsUtility.ApplyConfiguredRandomSelectionWeight();
+			ToddlersExpansionDiagnostics.Run();
+			RimTalkCompatUtility.TryRegisterToddlerVariables();
+			Integration.Toddlers.ToddlerCarryingGameComponent.RegisterGameComponent();
+			Integration.Toddlers.MidnightSnackUtility.RegisterGameComponent();
+			Integration.Toddlers.ToddlerAgeSettingsGameComponent.RegisterGameComponent();
+			Integration.Toddlers.LanguageLearningUtility.RegisterGameComponent();
+			Integration.Toddlers.ToddlerSelfBathUtility.RegisterGameComponent();
+			Integration.Toddlers.HAR.HarNurseryMoodUtility.RegisterGameComponent();
+			Integration.YayoAnimation.YayoAnimationSafeFallbackUtility.RegisterGameComponent();
+			Integration.Kiiro.KiiroRefugeeBabyGuardUtility.RegisterGameComponent();
 		}
 
 		public override void DoSettingsWindowContents(Rect inRect)

@@ -18,21 +18,27 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				return;
 			}
 
-			Type talkServiceType = AccessTools.TypeByName("RimTalk.Service.TalkService");
-			Type talkRequestType = AccessTools.TypeByName("RimTalk.Data.TalkRequest");
-			if (talkServiceType == null || talkRequestType == null)
-			{
-				return;
-			}
-
-			MethodInfo target = AccessTools.Method(talkServiceType, "GenerateTalk", new[] { talkRequestType });
-			if (target == null || target.ReturnType != typeof(bool) || target.ContainsGenericParameters)
+			MethodInfo target = FindGenerateTalkTarget();
+			if (target == null)
 			{
 				return;
 			}
 
 			MethodInfo postfix = AccessTools.Method(typeof(Patch_RimTalkTalkService), nameof(GenerateTalk_Postfix));
 			harmony.Patch(target, postfix: new HarmonyMethod(postfix));
+		}
+
+		private static MethodInfo FindGenerateTalkTarget()
+		{
+			Type talkServiceType = AccessTools.TypeByName("RimTalk.Service.TalkService");
+			Type talkRequestType = AccessTools.TypeByName("RimTalk.Data.TalkRequest");
+			if (talkServiceType == null || talkRequestType == null)
+			{
+				return null;
+			}
+
+			MethodInfo target = AccessTools.Method(talkServiceType, "GenerateTalk", new[] { talkRequestType });
+			return target?.ReturnType == typeof(bool) && !target.ContainsGenericParameters ? target : null;
 		}
 
 		private static void GenerateTalk_Postfix(object __0, bool __result)

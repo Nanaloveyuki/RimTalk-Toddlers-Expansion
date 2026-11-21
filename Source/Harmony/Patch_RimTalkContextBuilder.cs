@@ -21,24 +21,33 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				return;
 			}
 
-			Type infoLevelType = promptServiceType.GetNestedType("InfoLevel", BindingFlags.Public | BindingFlags.NonPublic);
-			MethodInfo pawnContextTarget = infoLevelType == null
-				? null
-				: AccessTools.Method(promptServiceType, "CreatePawnContext", new[] { typeof(Pawn), infoLevelType });
-			pawnContextTarget ??= AccessTools.Method(promptServiceType, "CreatePawnContext", new[] { typeof(Pawn) });
-
-			if (pawnContextTarget?.ReturnType == typeof(string) && !pawnContextTarget.ContainsGenericParameters)
+			MethodInfo pawnContextTarget = FindPawnContextTarget(promptServiceType);
+			if (IsStringContextTarget(pawnContextTarget))
 			{
 				MethodInfo postfix = AccessTools.Method(typeof(Patch_RimTalkContextBuilder), nameof(CreatePawnContext_Postfix));
 				harmony.Patch(pawnContextTarget, postfix: new HarmonyMethod(postfix));
 			}
 
 			MethodInfo listenerContextTarget = AccessTools.Method(promptServiceType, "CreateMinimalListenerContext", new[] { typeof(Pawn) });
-			if (listenerContextTarget?.ReturnType == typeof(string) && !listenerContextTarget.ContainsGenericParameters)
+			if (IsStringContextTarget(listenerContextTarget))
 			{
 				MethodInfo listenerPostfix = AccessTools.Method(typeof(Patch_RimTalkContextBuilder), nameof(CreateMinimalListenerContext_Postfix));
 				harmony.Patch(listenerContextTarget, postfix: new HarmonyMethod(listenerPostfix));
 			}
+		}
+
+		private static MethodInfo FindPawnContextTarget(Type promptServiceType)
+		{
+			Type infoLevelType = promptServiceType.GetNestedType("InfoLevel", BindingFlags.Public | BindingFlags.NonPublic);
+			MethodInfo target = infoLevelType == null
+				? null
+				: AccessTools.Method(promptServiceType, "CreatePawnContext", new[] { typeof(Pawn), infoLevelType });
+			return target ?? AccessTools.Method(promptServiceType, "CreatePawnContext", new[] { typeof(Pawn) });
+		}
+
+		private static bool IsStringContextTarget(MethodInfo target)
+		{
+			return target?.ReturnType == typeof(string) && !target.ContainsGenericParameters;
 		}
 
 		private static void CreatePawnContext_Postfix(Pawn __0, ref string __result)

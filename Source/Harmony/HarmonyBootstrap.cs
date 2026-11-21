@@ -20,13 +20,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			_initialized = true;
 			var harmony = new HarmonyLib.Harmony("cj.rimtalk.toddlers");
 			Patch_ModLogFiltering.Init(harmony);
-			if (RimTalkCompatUtility.IsRimTalkActive)
-			{
-				ApplyOptionalPatch(harmony, Patch_RimTalkContextBuilder.Init);
-				ApplyOptionalPatch(harmony, Patch_RimTalkDecorateTextCompatibility.Init);
-				ApplyOptionalPatch(harmony, Patch_RimTalkTalkService.Init);
-				ApplyOptionalPatch(harmony, Patch_RimTalkPersona.Init);
-			}
+			ApplyRimTalkPatches(harmony);
 			Patch_ToddlersWashBaby.Init(harmony);
 			Patch_ToddlersWashBabyBathRules.Init(harmony);
 			Patch_ToddlersLearningSync.Init(harmony);
@@ -82,6 +76,19 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Patch_VisitorToddlerBabyFood.Init(harmony);
 			
 			Log.Message("[RimTalk Toddlers Expansion] Patch initialization finished");
+		}
+
+		private static void ApplyRimTalkPatches(HarmonyLib.Harmony harmony)
+		{
+			if (!RimTalkCompatUtility.IsRimTalkActive)
+			{
+				return;
+			}
+
+			ApplyOptionalPatch(harmony, Patch_RimTalkContextBuilder.Init);
+			ApplyOptionalPatch(harmony, Patch_RimTalkDecorateTextCompatibility.Init);
+			ApplyOptionalPatch(harmony, Patch_RimTalkTalkService.Init);
+			ApplyOptionalPatch(harmony, Patch_RimTalkPersona.Init);
 		}
 
 		private static void ApplyOptionalPatch(HarmonyLib.Harmony harmony, Action<HarmonyLib.Harmony> init)
