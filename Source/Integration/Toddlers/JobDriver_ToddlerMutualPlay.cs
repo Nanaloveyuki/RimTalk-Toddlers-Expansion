@@ -20,6 +20,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		private AnimationDef _playAnimation;
 
 		private Pawn Partner => TargetA.Thing as Pawn;
+		internal bool IsPlaying => CurToilIndex == PlayToilIndex;
 
 		public override void ExposeData()
 		{
@@ -29,7 +30,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			Scribe_Defs.Look(ref _playAnimation, "playAnimation");
 			if (Scribe.mode == LoadSaveMode.PostLoadInit)
 			{
-				_restorePlayPresentation = CurToilIndex == PlayToilIndex;
+				_restorePlayPresentation = IsPlaying;
 			}
 		}
 
@@ -59,6 +60,8 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			this.FailOn(() => Partner?.Map != pawn.Map);
 			// Older saves retain the toil index, so walking and playing still require a committed partner.
 			this.FailOn(() => (_partnerJobStarted || CurToilIndex > StartPartnerToilIndex) && !IsPartnerStillCommitted());
+			this.FailOn(() => TargetC.IsValid && (Partner.Position != TargetC.Cell
+				|| TargetB.Cell.IsForbidden(pawn) || (IsPlaying && pawn.Position != TargetB.Cell)));
 
 			Toil startPartnerJob = ToilMaker.MakeToil("StartPartnerJob");
 			startPartnerJob.initAction = () =>
@@ -75,7 +78,14 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			startPartnerJob.defaultCompleteMode = ToilCompleteMode.Instant;
 			yield return startPartnerJob;
 
-			yield return Toils_Goto.GotoThing(PartnerInd, PathEndMode.Touch);
+			Toil approach = ToilMaker.MakeToil("ApproachMutualPlayCell");
+			approach.initAction = () =>
+			{
+				pawn.pather.StartPath(TargetC.IsValid ? TargetB : TargetA,
+					TargetC.IsValid ? PathEndMode.OnCell : PathEndMode.Touch);
+			};
+			approach.defaultCompleteMode = ToilCompleteMode.PatherArrival;
+			yield return approach;
 
 			Toil play = ToilMaker.MakeToil("ToddlerMutualPlay");
 			play.initAction = () =>
@@ -145,6 +155,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		private void InitializePlayPresentation()
 		{
+			// Older jobs walked to the pawn while describing an independently chosen cell.
+			if (!TargetC.IsValid && TargetB.Cell != pawn.Position)
+			{
+				job.targetB = pawn.Position;
+				job.reportStringOverride = null;
+			}
+
 			if (YayoAnimationCompatUtility.TryGetNativePlayAnimationOverride(pawn, out AnimationDef nativeAnimation))
 			{
 				_playAnimation = nativeAnimation;
@@ -170,7 +187,9 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				return false;
 			}
 
-			if (!pawn.CanReach(Partner, PathEndMode.Touch, Danger.Some))
+			IntVec3 playCell = TargetB.Cell;
+			if (!ToddlerMutualPlayUtility.CanUsePlayCell(pawn, Partner, playCell)
+				&& !ToddlerMutualPlayUtility.TryFindPlayCell(pawn, Partner, out playCell))
 			{
 				return false;
 			}
@@ -182,18 +201,22 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 
 			Job currentPartnerJob = Partner.CurJob;
+			job.targetB = playCell;
+			job.targetC = Partner.Position;
 			if (currentPartnerJob?.def == partnerJobDef)
 			{
-				return currentPartnerJob.targetA.Thing == pawn;
+				if (currentPartnerJob.targetA.Thing != pawn)
+				{
+					return false;
+				}
+
+				currentPartnerJob.targetB = playCell;
+				return true;
 			}
 
-			Job partnerJob = JobMaker.MakeJob(partnerJobDef, pawn);
+			Job partnerJob = JobMaker.MakeJob(partnerJobDef, pawn, playCell);
 			partnerJob.ignoreJoyTimeAssignment = true;
 			partnerJob.expiryInterval = job.expiryInterval > 0 ? job.expiryInterval : partnerJob.def.joyDuration;
-			if (job.targetB.IsValid)
-			{
-				partnerJob.targetB = job.targetB;
-			}
 			return Partner.jobs.TryTakeOrderedJob(partnerJob);
 		}
 

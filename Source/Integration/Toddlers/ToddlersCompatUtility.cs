@@ -177,12 +177,17 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		public static bool IsBusyForMutualPlay(Pawn pawn)
 		{
+			return IsBusyForMutualPlay(pawn, alreadyInOuting: false);
+		}
+
+		internal static bool IsBusyForMutualPlay(Pawn pawn, bool alreadyInOuting)
+		{
 			if (pawn?.jobs == null)
 			{
 				return false;
 			}
 
-			if (IsBabyBusy(pawn))
+			if (alreadyInOuting ? IsOutingParticipantBusy(pawn) : IsBabyBusy(pawn))
 			{
 				return true;
 			}
@@ -201,6 +206,25 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			for (int i = 0; i < queue.Count; i++)
 			{
 				if (IsMutualPlayJobDef(queue[i].job?.def))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		private static bool IsOutingParticipantBusy(Pawn pawn)
+		{
+			// Toddlers counts lord membership as busy, including membership in this outing.
+			if (pawn.Drafted || global::Toddlers.FeedingUtility.IsToddlerEatingUrgently(pawn))
+			{
+				return true;
+			}
+
+			foreach (Pawn colonist in pawn.Map.mapPawns.SpawnedPawnsInFaction(Faction.OfPlayer))
+			{
+				if (colonist.CurJob?.AnyTargetIs(pawn) == true)
 				{
 					return true;
 				}

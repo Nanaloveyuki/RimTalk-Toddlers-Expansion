@@ -11,6 +11,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
     {
         private const TargetIndex FoodInd = TargetIndex.A;
         private const int BiteDelay = 300;
+        private const float RecreationGain = 0.1f;
 
         private int bitesTaken = 0;
         private List<Pawn> followers = new List<Pawn>();
@@ -22,12 +23,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
         protected override IEnumerable<Toil> MakeNewToils()
         {
-            this.FailOnDespawnedNullOrForbidden(FoodInd);
-            // 移除饱腹度检查，让偷糖能够完成
-
-            yield return Toils_Goto.GotoThing(FoodInd, PathEndMode.ClosestTouch);
+            yield return Toils_Goto.GotoThing(FoodInd, PathEndMode.ClosestTouch).FailOnForbidden(FoodInd);
 
             var findFollowers = ToilMaker.MakeToil("FindFollowers");
+            findFollowers.FailOnDespawnedNullOrForbidden(FoodInd);
             findFollowers.initAction = () =>
             {
                 FindNearbyChildrenToFollow();
@@ -37,28 +36,21 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             yield return findFollowers;
 
             var eat = ToilMaker.MakeToil("EatFood");
+            eat.FailOnDespawnedNullOrForbidden(FoodInd);
+            eat.FailOn(() => !job.GetTarget(FoodInd).Thing.IngestibleNow);
             eat.initAction = () =>
             {
-                var food = job.GetTarget(FoodInd).Thing;
-                if (food != null && food.def.IsIngestible)
-                {
-                    int bites = Mathf.CeilToInt(food.def.ingestible.maxNumToIngestAtOnce / 2f);
-                    eat.actor.jobs.curDriver.ticksLeftThisToil = bites * BiteDelay;
-                }
+                int maxCount = job.GetTarget(FoodInd).Thing.def.ingestible.maxNumToIngestAtOnce;
+                ticksLeftThisToil = BitesPerSnack(maxCount) * BiteDelay;
             };
-            eat.tickIntervalAction = delta =>
-            {
-                if (Find.TickManager.TicksGame % BiteDelay == 0)
-                {
-                    TakeBite();
-                    bitesTaken++;
-                }
-            };
-            eat.defaultCompleteMode = ToilCompleteMode.Delay;
+            eat.tickAction = TickEating;
+            // Delay mode would advance at zero before the last bite.
+            eat.defaultCompleteMode = ToilCompleteMode.Never;
             eat.handlingFacing = true;
             yield return eat;
 
             var finish = ToilMaker.MakeToil("FinishEating");
+            finish.atomicWithPrevious = true;
             finish.initAction = () =>
             {
                 ApplyEffects();
@@ -103,21 +95,47 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             }
         }
 
-        private void TakeBite()
+        private void TickEating()
         {
-            var food = job.GetTarget(FoodInd).Thing;
-            if (food == null || food.Destroyed)
+            if (ticksLeftThisToil > 0 && ticksLeftThisToil % BiteDelay != 0)
             {
-                EndJobWith(JobCondition.Incompletable);
                 return;
             }
 
-            var ingestible = food.def.ingestible;
-            float nutrition = FoodUtility.GetNutrition(pawn, food, food.def) / ingestible.maxNumToIngestAtOnce;
+            Thing food = job.GetTarget(FoodInd).Thing;
+            int maxCount = Mathf.Max(1, food.def.ingestible.maxNumToIngestAtOnce);
+            int biteCount = BitesPerSnack(maxCount);
+            // Older saves can already have taken a bite before this countdown boundary.
+            if (bitesTaken >= biteCount)
+            {
+                ReadyForNextToil();
+                return;
+            }
+
+            float nutrition = FoodUtility.GetNutrition(pawn, food, food.def) / maxCount;
 
             pawn.needs.food.CurLevel += nutrition;
             food.Ingested(pawn, nutrition);
+            if (pawn.jobs.curDriver != this)
+            {
+                return;
+            }
 
+            ApplyToothDecayChance();
+            bitesTaken++;
+            if (food.Destroyed || bitesTaken >= biteCount || ticksLeftThisToil <= 0)
+            {
+                ReadyForNextToil();
+            }
+        }
+
+        private static int BitesPerSnack(int maxCount)
+        {
+            return Mathf.Max(1, Mathf.CeilToInt(maxCount / 2f));
+        }
+
+        private void ApplyToothDecayChance()
+        {
             if (Rand.Chance(0.05f))
             {
                 var existingHediff = pawn.health.hediffSet.GetFirstHediffOfDef(Core.ToddlersExpansionHediffDefOf.RimTalk_ToddlerToothDecay);
@@ -138,14 +156,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
         private void ApplyEffects()
         {
-            // 应用冷却
             ApplyCooldown();
 
-            var food = job.GetTarget(FoodInd).Thing;
             if (pawn.needs.joy != null)
             {
-                float joyGain = 0.1f;
-                pawn.needs.joy.CurLevel += joyGain;
+                pawn.needs.joy.CurLevel += RecreationGain;
+            }
+            else
+            {
+                pawn.needs.play?.Play(RecreationGain);
             }
 
             var thoughtDef = GetThoughtDefForPawn();

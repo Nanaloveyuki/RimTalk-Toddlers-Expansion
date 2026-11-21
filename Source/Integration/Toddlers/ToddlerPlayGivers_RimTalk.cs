@@ -93,8 +93,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	{
 		private const float PlayNeedThreshold = 0.85f;
 		private const int PartnerSearchRadius = 10;
-		private const int SpotSearchRadius = 6;
-		private const int SharedSpotDistance = 3;
 		private const int PartnerSearchNextTickKey = 1934182755;
 
 		public override bool CanDo(Pawn pawn)
@@ -128,10 +126,9 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				return null;
 			}
 
-			Job job = JobMaker.MakeJob(jobDef, partner);
+			Job job = JobMaker.MakeJob(jobDef, partner, spot);
 			job.ignoreJoyTimeAssignment = true;
 			job.expiryInterval = 2000;
-			job.targetB = spot;
 
 			return job;
 		}
@@ -203,48 +200,19 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 					continue;
 				}
 
-				if (!pawn.CanReach(other, PathEndMode.Touch, Danger.Some))
-				{
-					continue;
-				}
-
-				if (!TryFindPlaySpot(pawn, other, out IntVec3 sharedSpot))
+				if (!ToddlerMutualPlayUtility.TryFindPlayCell(pawn, other, out IntVec3 playCell))
 				{
 					continue;
 				}
 
 				partner = other;
-				spot = sharedSpot;
+				spot = playCell;
 				return true;
 			}
 
 			return false;
 		}
 
-		private static bool TryFindPlaySpot(Pawn pawn, Pawn partner, out IntVec3 spot)
-		{
-			Map map = pawn.Map;
-			IntVec3 root = new IntVec3((pawn.Position.x + partner.Position.x) / 2, 0, (pawn.Position.z + partner.Position.z) / 2);
-			return CellFinder.TryFindRandomCellNear(root, map, SpotSearchRadius, cell =>
-			{
-				if (!cell.Standable(map) || cell.IsForbidden(pawn) || cell.IsForbidden(partner))
-				{
-					return false;
-				}
-
-				if (!cell.InHorDistOf(pawn.Position, SharedSpotDistance) || !cell.InHorDistOf(partner.Position, SharedSpotDistance))
-				{
-					return false;
-				}
-
-				if (!pawn.CanReach(cell, PathEndMode.OnCell, Danger.Some) || !partner.CanReach(cell, PathEndMode.OnCell, Danger.Some))
-				{
-					return false;
-				}
-
-				return pawn.CanReserveSittableOrSpot(cell);
-			}, out spot);
-		}
 	}
 
 	public sealed class JobGiver_ToddlerSeekCompany : ThinkNode_JobGiver

@@ -13,8 +13,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
     public class JobGiver_ChildrenOutingPlay : ThinkNode_JobGiver
     {
         private const float MutualPlayPartnerSearchRadius = 8f;
-        private const int MutualPlaySpotSearchRadius = 6;
-        private const int MutualPlaySharedSpotDistance = 3;
         
         /// <summary>
         /// Duration range for play activities (in ticks)
@@ -36,7 +34,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             }
             
             // Try to find a partner for mutual play
-            Pawn partner = FindPlayPartner(pawn);
+            (Pawn partner, IntVec3 playCell) = FindPlayPartner(pawn);
             
             // Select a random play activity
             JobDef selectedJob = SelectPlayJob(pawn, partner, playJobs);
@@ -46,7 +44,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             }
             
             // Create the job
-            Job job = CreatePlayJob(pawn, selectedJob, partner);
+            Job job = CreatePlayJob(pawn, selectedJob, partner, playCell);
             return job;
         }
         
@@ -104,15 +102,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
         /// <summary>
         /// Find a play partner from the same lord
         /// </summary>
-        private Pawn FindPlayPartner(Pawn pawn)
+        private (Pawn partner, IntVec3 playCell) FindPlayPartner(Pawn pawn)
         {
-            if (pawn.GetLord() == null || ToddlersCompatUtility.IsBusyForMutualPlay(pawn))
+            if (pawn.GetLord() == null || ToddlersCompatUtility.IsBusyForMutualPlay(pawn, alreadyInOuting: true))
             {
-                return null;
+                return (null, IntVec3.Invalid);
             }
             
             List<Pawn> lordPawns = pawn.GetLord().ownedPawns;
-            List<Pawn> candidates = new List<Pawn>();
+            List<(Pawn partner, IntVec3 playCell)> candidates = new List<(Pawn, IntVec3)>();
             
             foreach (Pawn otherPawn in lordPawns)
             {
@@ -126,7 +124,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                     continue;
                 }
 
-                if (ToddlersCompatUtility.IsBusyForMutualPlay(otherPawn))
+                if (ToddlersCompatUtility.IsBusyForMutualPlay(otherPawn, alreadyInOuting: true))
                 {
                     continue;
                 }
@@ -147,20 +145,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                     continue;
                 }
 
-                if (!TryFindMutualPlaySpot(pawn, otherPawn, out _))
+                if (ToddlerMutualPlayUtility.TryFindPlayCell(pawn, otherPawn, out IntVec3 playCell))
                 {
-                    continue;
+                    candidates.Add((otherPawn, playCell));
                 }
-                
-                candidates.Add(otherPawn);
             }
-            
-            if (candidates.TryRandomElement(out Pawn partner))
-            {
-                return partner;
-            }
-            
-            return null;
+
+            return candidates.TryRandomElement(out var candidate) ? candidate : (null, IntVec3.Invalid);
         }
         
         /// <summary>
@@ -210,17 +201,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
         /// <summary>
         /// Create the play job
         /// </summary>
-        private Job CreatePlayJob(Pawn pawn, JobDef jobDef, Pawn partner)
+        private Job CreatePlayJob(Pawn pawn, JobDef jobDef, Pawn partner, IntVec3 mutualPlayCell)
         {
             Job job;
             
             if (partner != null && JobRequiresPartner(jobDef))
             {
-                job = JobMaker.MakeJob(jobDef, partner);
-                if (TryFindMutualPlaySpot(pawn, partner, out IntVec3 playSpot))
-                {
-                    job.targetB = playSpot;
-                }
+                job = JobMaker.MakeJob(jobDef, partner, mutualPlayCell);
             }
             else
             {
@@ -263,29 +250,5 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
             return IntVec3.Invalid;
         }
 
-        private bool TryFindMutualPlaySpot(Pawn pawn, Pawn partner, out IntVec3 spot)
-        {
-            Map map = pawn?.Map;
-            if (map == null || partner == null || partner.Map != map)
-            {
-                spot = IntVec3.Invalid;
-                return false;
-            }
-
-            IntVec3 root = new IntVec3((pawn.Position.x + partner.Position.x) / 2, 0, (pawn.Position.z + partner.Position.z) / 2);
-            return CellFinder.TryFindRandomCellNear(
-                root,
-                map,
-                MutualPlaySpotSearchRadius,
-                c =>
-                    c.Standable(map)
-                    && !c.IsForbidden(pawn)
-                    && !c.IsForbidden(partner)
-                    && c.InHorDistOf(pawn.Position, MutualPlaySharedSpotDistance)
-                    && c.InHorDistOf(partner.Position, MutualPlaySharedSpotDistance)
-                    && pawn.CanReach(c, PathEndMode.OnCell, Danger.Some)
-                    && partner.CanReach(c, PathEndMode.OnCell, Danger.Some),
-                out spot);
-        }
     }
 }

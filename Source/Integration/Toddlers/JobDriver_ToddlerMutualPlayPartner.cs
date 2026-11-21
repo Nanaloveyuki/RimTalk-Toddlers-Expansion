@@ -46,7 +46,8 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			};
 			waitForInitiator.tickAction = () =>
 			{
-				if (!IsInitiatorCommitted(requireReachability: true))
+				bool hasPlayCell = Initiator?.CurJob?.targetC.IsValid == true;
+				if (!IsInitiatorCommitted(requireReachability: !hasPlayCell))
 				{
 					EndJobWith(JobCondition.Incompletable);
 					return;
@@ -54,7 +55,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 				pawn.rotationTracker.FaceCell(Initiator.Position);
 
-				if (pawn.Position.InHorDistOf(Initiator.Position, 2))
+				bool ready = hasPlayCell
+					? Initiator.jobs.curDriver is JobDriver_ToddlerMutualPlay { IsPlaying: true }
+					: pawn.Position.InHorDistOf(Initiator.Position, 2);
+				if (ready)
 				{
 					ReadyForNextToil();
 				}
@@ -92,7 +96,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				pawn.rotationTracker.FaceCell(Initiator.Position);
 				pawn.GainComfortFromCellIfPossible(1);
 
-				if (SocialNeedTuning_Toddlers.IsMutualPlaySatisfied(pawn, Initiator))
+				if (!Initiator.CurJob.targetC.IsValid && SocialNeedTuning_Toddlers.IsMutualPlaySatisfied(pawn, Initiator))
 				{
 					EndJobWith(JobCondition.Succeeded);
 				}

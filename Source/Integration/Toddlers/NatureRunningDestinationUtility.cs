@@ -28,21 +28,14 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		AncientRoad
 	}
 
-	public sealed class NatureRunningDestinationContext
-	{
-		public NatureRunningDestinationPool Pool;
-		public IntVec3 TargetCell;
-		public string ActivityText;
-	}
-
 	public static class NatureRunningDestinationUtility
 	{
 		private const int CandidateSampleStride = 3;
 		private const int MaxCandidatesPerPool = 280;
 		private const int EdgeDistance = 25;
+		private const int WanderRadius = 6;
 		private const float SnowDepthThreshold = 0.25f;
 
-		private static readonly Dictionary<int, NatureRunningDestinationContext> ActiveContexts = new Dictionary<int, NatureRunningDestinationContext>();
 		private static readonly string[] ResearchRoomRoleNames = { "Laboratory", "ResearchLaboratory", "ResearchRoom" };
 		private static readonly string[] TempleRoomRoleNames = { "Temple" };
 		private static readonly string[] KitchenRoomRoleNames = { "Kitchen" };
@@ -111,20 +104,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				}
 			}
 
-			if (availablePools.Count == 0)
-			{
-				ClearContext(leader);
-				return false;
-			}
-
 			if (!availablePools.TryRandomElement(out (NatureRunningDestinationPool pool, List<DestinationCandidate> cells) selectedPool)
 				|| !selectedPool.cells.TryRandomElement(out DestinationCandidate selectedCandidate))
 			{
-				ClearContext(leader);
 				return false;
 			}
 
 			job.targetA = selectedCandidate.Cell;
+			// The vanilla driver overwrites target A on every leg. Target B saves the job's anchor.
+			job.targetB = selectedCandidate.Cell;
 
 			string activityText = BuildActivityText(selectedPool.pool, selectedCandidate);
 			if (!activityText.NullOrEmpty())
@@ -132,87 +120,56 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				job.reportStringOverride = activityText;
 			}
 
-			ActiveContexts[leader.thingIDNumber] = new NatureRunningDestinationContext
-			{
-				Pool = selectedPool.pool,
-				TargetCell = selectedCandidate.Cell,
-				ActivityText = activityText
-			};
-
 			return true;
 		}
 
-		public static void EnsureContextForStartedNatureRunning(Pawn leader, Job natureJob)
+		internal static IntVec3 GetOrRestoreAnchor(Job job, Map map)
 		{
-			if (leader == null || natureJob == null)
+			// Old saves only have the most recent waypoint available.
+			if (!job.targetB.IsValid && job.targetA.Cell.InBounds(map))
 			{
-				return;
+				job.targetB = job.targetA.Cell;
 			}
 
-			if (ActiveContexts.ContainsKey(leader.thingIDNumber))
-			{
-				return;
-			}
-
-			string activityText = natureJob.reportStringOverride;
-			if (activityText.NullOrEmpty())
-			{
-				activityText = T("RimTalk_NatureRunning_Activity_Default");
-				natureJob.reportStringOverride = activityText;
-			}
-
-			ActiveContexts[leader.thingIDNumber] = new NatureRunningDestinationContext
-			{
-				Pool = NatureRunningDestinationPool.VanillaEdgeRandom,
-				TargetCell = natureJob.targetA.Cell,
-				ActivityText = activityText
-			};
+			return job.targetB.Cell;
 		}
 
-		public static void ClearContext(Pawn pawn)
+		internal static bool TryFindNextWaypoint(Pawn leader, Map map, IntVec3 anchor, out IntVec3 waypoint)
 		{
-			if (pawn == null)
-			{
-				return;
-			}
-
-			ActiveContexts.Remove(pawn.thingIDNumber);
-		}
-
-		public static bool TryGetContext(Pawn leader, out NatureRunningDestinationContext context)
-		{
-			context = null;
-			if (leader == null)
+			waypoint = IntVec3.Invalid;
+			if (!anchor.InBounds(map) || !NatureRunningSafetyUtility.IsSafeNatureRunningTarget(leader, anchor, map))
 			{
 				return false;
 			}
 
-			return ActiveContexts.TryGetValue(leader.thingIDNumber, out context);
+			if (CellFinder.TryFindRandomCellNear(anchor, map, WanderRadius,
+				cell => IsValidNatureRunningTarget(leader, cell, map), out waypoint))
+			{
+				return true;
+			}
+
+			waypoint = anchor;
+			return IsValidNatureRunningTarget(leader, anchor, map);
 		}
 
-		public static void ApplyFollowJobReport(Job followJob, Pawn leader)
+		internal static void EnsureActivityText(Job natureJob)
 		{
-			if (followJob == null || leader == null)
+			if (natureJob.reportStringOverride.NullOrEmpty())
 			{
-				return;
+				natureJob.reportStringOverride = T("RimTalk_NatureRunning_Activity_Default");
 			}
-
-			if (!TryGetContext(leader, out NatureRunningDestinationContext context) || context.ActivityText.NullOrEmpty())
-			{
-				return;
-			}
-
-			followJob.reportStringOverride = T("RimTalk_FollowNatureRunner_WithActivity", leader.LabelShort, context.ActivityText);
 		}
 
 		public static string GetFollowReport(Pawn leader)
 		{
-			if (!TryGetContext(leader, out NatureRunningDestinationContext context) || context.ActivityText.NullOrEmpty())
+			Job natureJob = leader?.CurJob;
+			if (natureJob == null || natureJob.def != ToddlersExpansionJobDefOf.NatureRunning
+				|| natureJob.reportStringOverride.NullOrEmpty())
 			{
 				return null;
 			}
 
-			return T("RimTalk_FollowNatureRunner_WithActivity", leader.LabelShort, context.ActivityText);
+			return T("RimTalk_FollowNatureRunner_WithActivity", leader.LabelShort, natureJob.reportStringOverride);
 		}
 
 		private static List<NatureRunningDestinationPool> GetEnabledDestinationPools()
