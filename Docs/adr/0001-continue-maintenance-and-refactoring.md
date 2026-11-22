@@ -82,7 +82,6 @@ dotnet build Source/RimTalk_ToddlersExpansion.csproj -c Release -o "$build_outpu
 - [幼儿背负系统早期设计](../../plans/archive/ToddlerCarryingSystem.md)
 - [儿童野游系统早期设计](../../plans/archive/ChildrenOutingSystem.md)
 - Toddlers 工作体系架构分析见上游基线的 `Docs/Comprehensive_Toddlers_Job_Architecture.md`
-- [幼儿无聊机制](../../plans/toddler_boredom_system.md)
-- [ThoughtDef 问题分析](../../plans/bug_fix_thoughtdef_not_memory.md)
+- 幼儿无聊机制的早期设计和 ThoughtDef 问题分析见上游基线的 `plans/`。
 
 当前玩家说明见 [README](../../README.md)，后续工作见 [todo.md](../../todo.md)。
