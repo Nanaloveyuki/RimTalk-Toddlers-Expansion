@@ -21,8 +21,12 @@ RELEASE = ROOT / "artifacts/rte_continue/release"
 IS_WSL = sys.platform == "linux" and "microsoft" in platform.release().lower()
 GAME_NAMES = {"rimworld", "rimworldwin", "rimworldwin64", "rimworldwin64steam", "rimworldlinux", "rimworldmac"}
 DEPENDENCIES = {
-    "HarmonyModDir": ("2009463077", ("1.7/Assemblies/0Harmony.dll",)),
-    "ToddlersDir": ("2903359152", ("1.7/Assemblies/Toddlers.dll", "1.6/Assemblies/Toddlers.dll")),
+    "HarmonyModDir": (("2009463077", "1.7/Assemblies/0Harmony.dll"),),
+    "ToddlersDir": (
+        ("2903359152", "1.7/Assemblies/Toddlers.dll"),
+        ("3832132406", "1.7/Assemblies/Toddlers.dll"),
+        ("2903359152", "1.6/Assemblies/Toddlers.dll"),
+    ),
 }
 PATH_PROPERTIES = {*DEPENDENCIES, "HarmonyAssemblyPath", "ToddlersAssemblyPath"}
 
@@ -124,14 +128,18 @@ def guard_target(target, game, config):
         raise RuntimeError(f"New install directory must be named {config['target']}: {target}")
 
 
-def dependency_dir(game, workshop_id, assemblies):
-    local = game / "Mods" / workshop_id
-    workshop = game.parent.parent / "workshop/content/294100" / workshop_id
-    return next((folder for folder in (local, workshop) if any((folder / item).is_file() for item in assemblies)), local)
+def dependency_dir(game, candidates):
+    workshop = game.parent.parent / "workshop/content/294100"
+    for workshop_id, assembly in candidates:
+        for root in (game / "Mods", workshop):
+            folder = root / workshop_id
+            if (folder / assembly).is_file():
+                return folder
+    return game / "Mods" / candidates[0][0]
 
 
 def build_17(game, args, config, output):
-    properties = {name: dependency_dir(game, *dependency) for name, dependency in DEPENDENCIES.items()}
+    properties = {name: dependency_dir(game, candidates) for name, candidates in DEPENDENCIES.items()}
     for name, value in args.property:
         properties[name] = local_path(value) if name in PATH_PROPERTIES else value
     properties.update(RimWorldDir=game, GameVersion="1.7")
