@@ -135,7 +135,10 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Vector3 offset = GetScaledCarryOffset(carrier, carrierRotation);
 			Vector3 animOffset = CarriedPlayAnimationTracker.GetAnimationOffset(carrier, __instance);
 
-			__result = carrierPos + offset + animOffset;
+			// The renderer adds the toddler's life-stage offset after reading DrawPos.
+			Vector3 bodyAnchorOffset = carrier.ageTracker.CurLifeStage.bodyDrawOffset
+				- __instance.ageTracker.CurLifeStage.bodyDrawOffset;
+			__result = carrierPos + bodyAnchorOffset + offset + animOffset;
 		}
 
 		private static Vector3 GetScaledCarryOffset(Pawn carrier, Rot4 carrierRotation)

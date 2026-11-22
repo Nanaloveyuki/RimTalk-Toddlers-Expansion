@@ -204,6 +204,17 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 		}
 
+		public static void EnsureChildFallbackApparel(Pawn child)
+		{
+			if (child?.apparel == null || child.DevelopmentalStage != DevelopmentalStage.Child || HasBodyApparel(child))
+			{
+				return;
+			}
+
+			bool preferTribal = child.Faction?.def?.techLevel <= TechLevel.Neolithic;
+			TryEquipFallbackBody(child, ToddlersCompatUtility.ToddlerApparelSetting.ChildApparel, preferTribal);
+		}
+
 		private static bool TryEquipFallbackBody(Pawn pawn, ToddlersCompatUtility.ToddlerApparelSetting apparelSetting, bool preferTribal)
 		{
 			string[] candidates = apparelSetting == ToddlersCompatUtility.ToddlerApparelSetting.ChildApparel
@@ -277,20 +288,26 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				return false;
 			}
 
-			return ApparelUtility.HasPartsToWear(pawn, def);
+			return def.apparel.PawnCanWear(pawn) && ApparelUtility.HasPartsToWear(pawn, def);
 		}
 
 		private static bool TryWearFallbackDef(Pawn pawn, ThingDef def)
 		{
-			ThingDef stuff = def.MadeFromStuff ? GenStuff.DefaultStuffFor(def) : null;
-			Apparel apparel = ThingMaker.MakeThing(def, stuff) as Apparel;
-			if (apparel == null)
+			if (def == null)
 			{
 				return false;
 			}
 
+			Apparel apparel = null;
 			try
 			{
+				ThingDef stuff = def.MadeFromStuff ? GenStuff.DefaultStuffFor(def) : null;
+				apparel = ThingMaker.MakeThing(def, stuff) as Apparel;
+				if (apparel == null)
+				{
+					return false;
+				}
+
 				if (!apparel.PawnCanWear(pawn) || !ApparelUtility.HasPartsToWear(pawn, def))
 				{
 					apparel.Destroy(DestroyMode.Vanish);
@@ -303,7 +320,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 			catch
 			{
-				if (!apparel.Destroyed)
+				if (apparel != null && !apparel.Destroyed)
 				{
 					apparel.Destroy(DestroyMode.Vanish);
 				}
@@ -447,14 +464,14 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		/// </summary>
 		public static void TryInjectChildTravelFood(Pawn child, IEnumerable<Pawn> groupMembers)
 		{
-			if (child?.inventory?.innerContainer == null || child.DevelopmentalStage != DevelopmentalStage.Child)
+			if (child?.inventory?.innerContainer == null || child.needs?.food == null || child.DevelopmentalStage != DevelopmentalStage.Child)
 			{
 				return;
 			}
 
 			foreach (Thing thing in child.inventory.innerContainer)
 			{
-				if (thing?.def?.IsNutritionGivingIngestible == true && !thing.def.IsDrug)
+				if (thing?.def?.IsNutritionGivingIngestible == true && !thing.def.IsDrug && child.WillEat(thing))
 				{
 					return;
 				}
@@ -468,13 +485,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 			try
 			{
-				ThingDef foodDef = foodTemplate.invFoodDef;
+				ThingDef foodDef = ChooseChildTravelFood(child, foodTemplate.invFoodDef);
 				if (foodDef == null)
 				{
-					float roll = Rand.Value;
-					foodDef = roll < 0.5f
-						? ThingDefOf.MealSimple
-						: roll < 0.75f ? ThingDefOf.MealFine : ThingDefOf.MealSurvivalPack;
+					return;
 				}
 
 				Thing food = ThingMaker.MakeThing(foodDef);
@@ -501,6 +515,38 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			{
 				Log.Warning($"[RimTalk_ToddlersExpansion] Failed to give travel food to child {child.LabelShort}: {ex.Message}");
 			}
+		}
+
+		private static ThingDef ChooseChildTravelFood(Pawn child, ThingDef templateFood)
+		{
+			if (CanUseChildTravelFood(child, templateFood))
+			{
+				return templateFood;
+			}
+
+			float roll = Rand.Value;
+			ThingDef preferredMeal = roll < 0.5f
+				? ThingDefOf.MealSimple
+				: roll < 0.75f ? ThingDefOf.MealFine : ThingDefOf.MealSurvivalPack;
+			if (CanUseChildTravelFood(child, preferredMeal))
+			{
+				return preferredMeal;
+			}
+
+			foreach (ThingDef meal in new[] { ThingDefOf.MealSimple, ThingDefOf.MealFine, ThingDefOf.MealSurvivalPack })
+			{
+				if (meal != preferredMeal && CanUseChildTravelFood(child, meal))
+				{
+					return meal;
+				}
+			}
+
+			return null;
+		}
+
+		private static bool CanUseChildTravelFood(Pawn child, ThingDef food)
+		{
+			return food?.IsNutritionGivingIngestible == true && !food.IsDrug && child.WillEat(food);
 		}
 
 		private static PawnKindDef FindAdultTravelFoodTemplate(Pawn child, IEnumerable<Pawn> groupMembers)

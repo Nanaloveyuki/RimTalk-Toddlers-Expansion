@@ -124,13 +124,14 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			if (IsVisitorToddler(pawn))
 			{
 				TryEnsureBabyFood(pawn);
+				ToddlerPawnGenerationUtility.EnsureToddlerFallbackApparel(pawn, pawn.MapHeld?.Tile ?? -1);
 			}
 			else
 			{
 				TryEnsureChildTravelFood(pawn);
+				ToddlerPawnGenerationUtility.EnsureChildFallbackApparel(pawn);
 			}
 
-			ToddlerPawnGenerationUtility.EnsureToddlerFallbackApparel(pawn, pawn.MapHeld?.Tile ?? -1);
 			TryApplyNewEnvironmentMood(pawn);
 
 			// 延后处理背负关系（需要等其他成员也spawn完成）
