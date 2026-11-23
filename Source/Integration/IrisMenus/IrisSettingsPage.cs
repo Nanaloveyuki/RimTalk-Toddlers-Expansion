@@ -25,6 +25,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 		private readonly Dictionary<string, UiSwitch> switches = new Dictionary<string, UiSwitch>();
 		private readonly Dictionary<string, UiSlider> sliders = new Dictionary<string, UiSlider>();
 		private readonly Dictionary<string, UiHoverCard> tooltips = new Dictionary<string, UiHoverCard>();
+		private readonly Dictionary<string, UiSegments> choices = new Dictionary<string, UiSegments>();
 		private Listing_Standard listing;
 
 		internal IrisSettingsListing(UiContext context, Action<IrisSettingsListing> draw)
@@ -70,29 +71,51 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 			return Mathf.Ceil(height) + 4f * context.Scale;
 		}
 
-		public override void CheckboxLabeled(string key, ref bool value, string tooltip = null)
+		public override void CheckboxLabeled(string id, string label, ref bool value, string tooltip = null)
 		{
-			string label = key.Translate();
 			float scale = context.Scale;
 			float labelWidth = Mathf.Max(1f, listing.ColumnWidth - 64f * scale);
 			Rect row = listing.GetRect(Mathf.Max(36f * scale, MeasureLabel(label, labelWidth)));
-			if (!switches.TryGetValue(key, out UiSwitch control))
+			if (!switches.TryGetValue(id, out UiSwitch control))
 			{
 				control = new UiSwitch(context);
-				switches.Add(key, control);
+				switches.Add(id, control);
 			}
 			context.Label(new Rect(row.x, row.y, labelWidth, row.height), label, context.Palette.Ink, wrap: true);
 			value = control.Draw(row, value, scale: scale);
 
 			if (!string.IsNullOrEmpty(tooltip))
 			{
-				if (!tooltips.TryGetValue(key, out UiHoverCard card))
+				if (!tooltips.TryGetValue(id, out UiHoverCard card))
 				{
 					card = new UiHoverCard(context);
-					tooltips.Add(key, card);
+					tooltips.Add(id, card);
 				}
 				card.Observe(row, tooltip, control.Id, context.IsRectVisible(row));
 			}
+		}
+
+		public override void PawnIdentity(Pawn pawn, string label)
+		{
+			float portraitSize = 52f * context.Scale;
+			float labelOffset = portraitSize + 8f * context.Scale;
+			float labelWidth = Mathf.Max(1f, listing.ColumnWidth - labelOffset);
+			Rect row = listing.GetRect(Mathf.Max(portraitSize, MeasureLabel(label, labelWidth)));
+			if (context.IsRectVisible(row))
+			{
+				DrawPawnPortrait(new Rect(row.x, row.y, portraitSize, portraitSize), pawn);
+			}
+			context.Label(new Rect(row.x + labelOffset, row.y, labelWidth, row.height), label, context.Palette.Ink, wrap: true);
+		}
+
+		public override int Choice(string id, string[] options, int selected)
+		{
+			if (!choices.TryGetValue(id, out UiSegments control))
+			{
+				control = new UiSegments(context, options);
+				choices.Add(id, control);
+			}
+			return control.Draw(ControlRow(), selected, scale: context.Scale);
 		}
 
 		protected override float DrawSlider(string key, string label, float value, float min, float max, float step)
@@ -126,6 +149,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 
 		public void Dispose()
 		{
+			foreach (UiSegments control in choices.Values)
+			{
+				for (int i = 0; i < control.Count; i++)
+				{
+					Release(control.GetItemId(i));
+				}
+			}
 			foreach (UiSwitch control in switches.Values)
 			{
 				Release(control.Id);

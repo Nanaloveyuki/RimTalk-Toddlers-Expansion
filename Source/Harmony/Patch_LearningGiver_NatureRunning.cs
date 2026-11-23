@@ -153,8 +153,10 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
             NatureRunningDestinationUtility.EnsureActivityText(newJob);
             
-            // Recruit nearby children and toddlers
-            RecruitNearbyFollowers(leader);
+            if (ToddlersExpansionSettings.EnableNatureRunningFollowers)
+            {
+                RecruitNearbyFollowers(leader);
+            }
         }
         
         /// <summary>

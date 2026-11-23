@@ -10,7 +10,8 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 	{
 		public static void ApplySleepThoughts(Pawn pawn, Building_Bed bed)
 		{
-			if (pawn?.needs?.mood?.thoughts?.memories == null || !ToddlersCompatUtility.IsToddlerOrBaby(pawn))
+			if (!ToddlersExpansionSettings.EnableFamilyBedroomThoughts || pawn?.needs?.mood?.thoughts?.memories == null
+				|| !ToddlersCompatUtility.IsToddlerOrBaby(pawn))
 			{
 				return;
 			}

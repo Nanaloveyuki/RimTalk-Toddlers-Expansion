@@ -14,6 +14,8 @@ namespace RimTalk_ToddlersExpansion.Core
 		private static Vector2 outingScrollPosition = Vector2.zero;
 		private static Vector2 animationScrollPosition = Vector2.zero;
 		private static Vector2 talkScrollPosition = Vector2.zero;
+		private static Vector2 babyHairScrollPosition;
+		private static float babyHairContentHeight;
 
 		public ToddlersExpansionMod(ModContentPack content) : base(content)
 		{
@@ -26,7 +28,7 @@ namespace RimTalk_ToddlersExpansion.Core
 
 		private static void InitializeAfterDefsLoaded()
 		{
-			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
+			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge();
 			Integration.Toddlers.ChildrenOutingSettingsUtility.ApplyConfiguredRandomSelectionWeight();
 			Integration.Toddlers.ToddlerPlayAnimationUtility.InitializePlayAnimationWorkers();
 			ToddlersExpansionDiagnostics.Run();
@@ -41,7 +43,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				return;
 			}
 
-			settings.SettingsPageIndex = Mathf.Clamp(settings.SettingsPageIndex, 0, 3);
+			settings.SettingsPageIndex = Mathf.Clamp(settings.SettingsPageIndex, 0, 4);
 
 			const float topPadding = 40f;
 			Rect tabsRect = new Rect(inRect.x, inRect.y + topPadding, inRect.width, 32f);
@@ -50,7 +52,8 @@ namespace RimTalk_ToddlersExpansion.Core
 				new TabRecord("RimTalk_ToddlersExpansion_Settings_Page1".Translate(), () => settings.SettingsPageIndex = 0, settings.SettingsPageIndex == 0),
 				new TabRecord("RimTalk_ToddlersExpansion_Settings_Page2".Translate(), () => settings.SettingsPageIndex = 1, settings.SettingsPageIndex == 1),
 				new TabRecord("RimTalk_ToddlersExpansion_Settings_Page3".Translate(), () => settings.SettingsPageIndex = 2, settings.SettingsPageIndex == 2),
-				new TabRecord("RimTalk_ToddlersExpansion_Settings_Page4".Translate(), () => settings.SettingsPageIndex = 3, settings.SettingsPageIndex == 3)
+				new TabRecord("RimTalk_ToddlersExpansion_Settings_Page4".Translate(), () => settings.SettingsPageIndex = 3, settings.SettingsPageIndex == 3),
+				new TabRecord((YoungPawnSettingsKey + "BabyHair").Translate(), () => settings.SettingsPageIndex = 4, settings.SettingsPageIndex == 4)
 			};
 			TabDrawer.DrawTabs(tabsRect, tabs);
 
@@ -67,16 +70,20 @@ namespace RimTalk_ToddlersExpansion.Core
 			{
 				DrawAnimationSettingsPage(pageRect);
 			}
-			else
+			else if (settings.SettingsPageIndex == 3)
 			{
 				DrawTalkSettingsPage(pageRect);
+			}
+			else
+			{
+				DrawBabyHairSettingsPage(pageRect);
 			}
 		}
 
 		public override void WriteSettings()
 		{
 			base.WriteSettings();
-			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
+			Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge();
 			Integration.Toddlers.ChildrenOutingSettingsUtility.ApplyConfiguredRandomSelectionWeight();
 		}
 
@@ -97,7 +104,6 @@ namespace RimTalk_ToddlersExpansion.Core
 			DrawBoredomSettingsSection(leftSettings);
 			DrawLanguageSettingsSection(leftSettings);
 			DrawFeedingSettingsSection(leftSettings);
-			DrawBabyAppearanceSettingsSection(leftSettings);
 			DrawBabyCrySettingsSection(leftSettings);
 			leftColumn.End();
 
@@ -106,6 +112,7 @@ namespace RimTalk_ToddlersExpansion.Core
 			var rightSettings = new VanillaSettingsListing(rightColumn);
 			DrawPerformanceSettingsSection(rightSettings);
 			DrawBehaviorSettingsSection(rightSettings);
+			DrawMapExitSettingsSection(rightSettings);
 			DrawInteractionSettingsSection(rightSettings);
 			DrawMishapEventSettingsSection(rightSettings);
 			rightColumn.End();
@@ -151,6 +158,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				ref ToddlersExpansionSettings.enableNatureRunningSafetyChecks,
 				"RimTalk_ToddlersExpansion_EnableNatureRunningSafetyChecks_Tooltip".Translate());
 			listingStandard.Gap();
+			DrawYoungPawnToggle(listingStandard, "NatureRunningFollowers", ref ToddlersExpansionSettings.EnableNatureRunningFollowers);
 			listingStandard.GapLine();
 
 			listingStandard.CheckboxLabeled("RimTalk_ToddlersExpansion_OutingPool_VanillaEdgeRandom", ref settings.EnableOutingPoolVanillaEdgeRandom);
@@ -395,7 +403,7 @@ namespace RimTalk_ToddlersExpansion.Core
 					ToddlersExpansionSettings.GetNewbornToToddlerDays(), 1, 179, oldThresholdDays, ToddlersExpansionSettings.GetNewbornToToddlerYears().ToString("0.##"));
 			if (ToddlersExpansionSettings.GetNewbornToToddlerDays() != oldThresholdDays)
 			{
-				Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(refreshExistingPawns: false);
+				Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge();
 			}
 			listingStandard.Gap();
 			ToddlersExpansionSettings.learningFactor_Talking =
@@ -412,17 +420,10 @@ namespace RimTalk_ToddlersExpansion.Core
 				listingStandard.Slider("RimTalk_ToddlersExpansion_ToddlerEatingSpeed",
 					ToddlersExpansionSettings.toddlerEatingSpeedFactor, 0.1f, 10f, ToddlersExpansionSettings.toddlerEatingSpeedFactor.ToString("0.##"));
 			listingStandard.Gap();
-			listingStandard.GapLine();
-		}
-
-		internal static void DrawBabyAppearanceSettingsSection(SettingsListing listingStandard)
-		{
-			listingStandard.Heading("RimTalk_ToddlersExpansion_BabyAppearance_Settings_Header".Translate());
-			listingStandard.CheckboxLabeled(
-				"RimTalk_ToddlersExpansion_EnableUnder3HairRendering",
-				ref ToddlersExpansionSettings.enableUnder3HairRendering,
-				"RimTalk_ToddlersExpansion_EnableUnder3HairRendering_Tooltip".Translate());
-			listingStandard.Gap();
+			DrawYoungPawnGroupSettings(listingStandard, "SupplyFood", ToddlerFoodSettings.SupplyFood);
+			DrawYoungPawnGroupSettings(listingStandard, "FeedWhileCarried", ToddlerFoodSettings.FeedWhileCarried);
+			DrawYoungPawnGroupSettings(listingStandard, "FeedInCaravan", ToddlerFoodSettings.FeedInCaravan);
+			DrawYoungPawnToggle(listingStandard, "MidnightSnacks", ref ToddlersExpansionSettings.EnableMidnightSnacks);
 			listingStandard.GapLine();
 		}
 
@@ -445,6 +446,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				"RimTalk_ToddlersExpansion_BabyCry_NoMood_Tooltip".Translate());
 			ToddlersExpansionSettings.babyCryAffectsMood = !muteMoodImpact;
 			listingStandard.Gap();
+			DrawYoungPawnToggle(listingStandard, "NonBlockingBabyFits", ref ToddlersExpansionSettings.EnableNonBlockingBabyFits);
 		}
 
 		internal static void DrawBehaviorSettingsSection(SettingsListing listingStandard)
@@ -473,6 +475,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				ref ToddlersExpansionSettings.enableToddlerPlaySafetyChecks,
 				"RimTalk_ToddlersExpansion_EnableToddlerPlaySafetyChecks_Tooltip".Translate());
 			listingStandard.Gap();
+			DrawYoungPawnToggle(listingStandard, "FamilyBedroomThoughts", ref ToddlersExpansionSettings.EnableFamilyBedroomThoughts);
 			listingStandard.GapLine();
 		}
 
@@ -489,6 +492,11 @@ namespace RimTalk_ToddlersExpansion.Core
 				ref ToddlersExpansionSettings.EnableChildBabyCarryInteractions,
 				"RimTalk_ToddlersExpansion_Interaction_EnableChildCarry_Tooltip".Translate());
 			listingStandard.Gap();
+			DrawYoungPawnToggle(listingStandard, "BabyCarryDesire", ref ToddlersExpansionSettings.EnableBabyCarryDesire);
+			DrawYoungPawnToggle(listingStandard, "AutomaticToddlerBathing", ref ToddlersExpansionSettings.EnableAutomaticToddlerBathing);
+			DrawYoungPawnToggle(listingStandard, "FriendlyBabyAdoption", ref ToddlersExpansionSettings.EnableFriendlyBabyAdoption);
+			DrawYoungPawnToggle(listingStandard, "IgnoreBabyStripGoodwill", ref ToddlersExpansionSettings.EnableIgnoreBabyStripGoodwill);
+			DrawYoungPawnToggle(listingStandard, "KiiroRefugeeProtection", ref ToddlersExpansionSettings.EnableKiiroRefugeeProtection);
 			if (RimTalkCompatUtility.IsRimTalkActive)
 			{
 				listingStandard.CheckboxLabeled(

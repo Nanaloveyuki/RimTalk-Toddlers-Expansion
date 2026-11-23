@@ -244,7 +244,13 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 			if (remainingAdults.NullOrEmpty())
 			{
-				// 没有成年人了，强制解散或让所有人离开地图
+				// A gathering can lose its last adult without becoming a departure group.
+				if (!IsTravelingLord(lord.LordJob) && lord.CurLordToil is not LordToil_ExitMap
+					&& _lordToilExitMapAndEscortCarriersType?.IsInstanceOfType(lord.CurLordToil) != true)
+				{
+					return;
+				}
+
 				for (int i = 0; i < orphanedToddlers.Count; i++)
 				{
 					Pawn toddler = orphanedToddlers[i];
@@ -265,7 +271,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void ForcePawnLeaveMap(Pawn pawn)
 		{
-			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned)
+			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
 				return;
 
 			if (pawn.Downed

@@ -611,7 +611,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		private static void TryStartExitMap(Pawn pawn)
 		{
-			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned)
+			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
 			{
 				return;
 			}

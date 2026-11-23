@@ -1,3 +1,4 @@
+using RimTalk_ToddlersExpansion.Core;
 using RimWorld;
 using Verse;
 
@@ -16,7 +17,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
         public override void GameComponentTick()
         {
             int tick = game.tickManager.TicksGame;
-            if (tick < ticksUntilNextCheck)
+            if (!ToddlersExpansionSettings.EnableMidnightSnacks || tick < ticksUntilNextCheck)
                 return;
 
             ticksUntilNextCheck = tick + GenDate.TicksPerHour;

@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using RimTalk_ToddlersExpansion.Integration.RimTalk;
+using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimTalk_ToddlersExpansion.Integration.YayoAnimation;
 using Verse;
 
@@ -34,6 +35,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			Patch_TravelingLord.Init(harmony);
 			Patch_CarriedToddlerMapEdgeReachability.Init(harmony);
 			Patch_ExitMapDuty.Init(harmony);
+			Patch_ToddlerMapExit.Init(harmony);
 			
 			Patch_ToddlerPrisonerThinkTree.Init(harmony);
 			Patch_ToddlerPrisonerApparel.Init(harmony);
@@ -68,6 +70,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			YayoAnimationCompatUtility.ApplyPatches(harmony);
 			
 			Patch_VisitorToddlerBabyFood.Init(harmony);
+			Caravan_NeedsTracker_ToddlerFeeding_Patch.Init(harmony);
 			
 			Log.Message("[RimTalk Toddlers Expansion] Patch initialization finished");
 		}

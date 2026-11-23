@@ -464,7 +464,8 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		/// </summary>
 		public static void TryInjectChildTravelFood(Pawn child, IEnumerable<Pawn> groupMembers)
 		{
-			if (child?.inventory?.innerContainer == null || child.needs?.food == null || child.DevelopmentalStage != DevelopmentalStage.Child)
+			if (child?.inventory?.innerContainer == null || child.needs?.food == null
+				|| child.DevelopmentalStage != DevelopmentalStage.Child || !ToddlerFoodSettings.SupplyFood.Allows(child))
 			{
 				return;
 			}
@@ -585,15 +586,43 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		/// </summary>
 		public static void TryInjectBabyFood(Pawn toddler, float ageYears)
 		{
-			if (toddler == null || toddler.inventory == null)
+			if (toddler?.inventory?.innerContainer == null || !ToddlerFoodSettings.SupplyFood.Allows(toddler))
 			{
 				return;
 			}
 
+			TryAddBabyFood(toddler, ageYears, 0);
+		}
+
+		internal static void TryTopUpBabyFood(Pawn toddler)
+		{
+			var inventory = toddler?.inventory?.innerContainer;
+			if (inventory == null)
+			{
+				return;
+			}
+
+			int existingCount = 0;
+			foreach (Thing thing in inventory)
+			{
+				if (thing.def == ThingDefOf.BabyFood)
+				{
+					existingCount += thing.stackCount;
+				}
+			}
+
+			if (existingCount < MinBabyFoodUnits)
+			{
+				TryAddBabyFood(toddler, toddler.ageTracker?.AgeBiologicalYearsFloat ?? 1f, existingCount);
+			}
+		}
+
+		private static void TryAddBabyFood(Pawn toddler, float ageYears, int existingCount)
+		{
 			float foodUnits = BabyFoodBaseUnits + (ageYears * BabyFoodUnitsPerToddlerAgeYear);
 			foodUnits = Mathf.Clamp(foodUnits, MinBabyFoodUnits, MaxBabyFoodUnits);
 
-			int foodCount = Mathf.RoundToInt(foodUnits);
+			int foodCount = Mathf.RoundToInt(foodUnits) - existingCount;
 
 			if (foodCount <= 0)
 			{
@@ -606,17 +635,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				if (babyFood != null)
 				{
 					babyFood.stackCount = foodCount;
-					toddler.inventory.innerContainer.TryAdd(babyFood);
-
-					if (Prefs.DevMode)
+					if (toddler.inventory.innerContainer.TryAdd(babyFood) && ToddlersExpansionSettings.ShouldEmitVerboseDebugLogs)
 					{
-						Log.Message($"[RimTalk_ToddlersExpansion] 为toddler {toddler.Name}添加了{foodCount}个婴儿食品");
+						Log.Message($"[RimTalk_ToddlersExpansion] Gave {toddler.LabelShort} {foodCount} baby food.");
 					}
 				}
 			}
 			catch (Exception ex)
 			{
-				Log.Warning($"[RimTalk_ToddlersExpansion] 注入婴儿食品失败: {ex.Message}");
+				Log.Warning($"[RimTalk_ToddlersExpansion] Failed to give baby food to {toddler.LabelShort}: {ex.Message}");
 			}
 		}
 

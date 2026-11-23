@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimWorld;
 using RimWorld.Planet;
 using Verse;
@@ -17,9 +18,6 @@ namespace RimTalk_ToddlersExpansion.Harmony
 	/// </summary>
 	public static class Patch_IgnoreToddlerMentalStates
 	{
-		private const string CryingDefName = "Crying";
-		private const string GigglingDefName = "Giggling";
-
 		private static readonly MethodInfo PawnInMentalStateGetter =
 			AccessTools.PropertyGetter(typeof(Pawn), nameof(Pawn.InMentalState));
 
@@ -154,19 +152,13 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static bool IsIgnoredBabyFitMentalState(Pawn pawn, MentalStateDef stateDef)
 		{
-			if (pawn == null || stateDef == null)
+			if (pawn == null || !ToddlerMentalStateUtility.IsNonBlockingBabyMentalState(stateDef))
 			{
 				return false;
 			}
 
 			DevelopmentalStage stage = pawn.DevelopmentalStage;
-			if (stage != DevelopmentalStage.Baby && stage != DevelopmentalStage.Newborn)
-			{
-				return false;
-			}
-
-			string defName = stateDef.defName;
-			return defName == CryingDefName || defName == GigglingDefName;
+			return stage == DevelopmentalStage.Baby || stage == DevelopmentalStage.Newborn;
 		}
 
 		private static bool IsTransportContainer(IThingHolder holder)

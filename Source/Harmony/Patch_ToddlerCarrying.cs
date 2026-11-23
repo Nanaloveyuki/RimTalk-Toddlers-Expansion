@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimTalk_ToddlersExpansion.UI;
 using RimWorld;
@@ -282,6 +283,10 @@ namespace RimTalk_ToddlersExpansion.Harmony
 		{
 			// Capturing a pawn can change its host while keeping its faction.
 			ToddlerSelfBathGameComponent.NotifyPawnEligibilityChanged(___pawn);
+			if (___pawn?.IsPrisoner == true || ___pawn?.IsSlave == true)
+			{
+				Patch_VisitorToddlerBabyFood.TrySupplyBabyFoodOnMap(___pawn);
+			}
 		}
 
 		private static void Pawn_Kill_Prefix(Pawn __instance)
@@ -360,7 +365,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				}
 
 				ToddlerCarryingUtility.DismountToddler(toddler);
-				TryQueueExitMapJob(toddler);
+				TryQueueExitMapJob(toddler, carrier);
 			}
 			_exitMapCarryBuffer.Clear();
 		}
@@ -412,7 +417,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 				if (!TryExitMapImmediately(toddler, carrier.Rotation))
 				{
-					TryQueueExitMapJob(toddler);
+					TryQueueExitMapJob(toddler, carrier);
 				}
 			}
 			_exitWithCarrierBuffer.Clear();
@@ -436,9 +441,16 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			}
 		}
 
-		private static void TryQueueExitMapJob(Pawn pawn)
+		private static void TryQueueExitMapJob(Pawn pawn, Pawn carrier)
 		{
 			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned)
+			{
+				return;
+			}
+
+			if (!ToddlerExitSettings.AllowsAutomaticExit(pawn)
+				&& !ToddlerExitSettings.IsFormingPlayerCaravan(carrier)
+				&& carrier.CurJob is not { playerForced: true, exitMapOnArrival: true })
 			{
 				return;
 			}

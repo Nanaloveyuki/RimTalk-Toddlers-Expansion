@@ -1,3 +1,4 @@
+using RimTalk_ToddlersExpansion.Core;
 using Verse;
 
 namespace RimTalk_ToddlersExpansion.Integration.Toddlers
@@ -17,15 +18,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			return !IsNonBlockingBabyMentalState(pawn.MentalStateDef);
 		}
 
-		private static bool IsNonBlockingBabyMentalState(MentalStateDef mentalStateDef)
+		internal static bool IsNonBlockingBabyMentalState(MentalStateDef mentalStateDef)
 		{
-			if (mentalStateDef == null)
-			{
-				return false;
-			}
-
-			string defName = mentalStateDef.defName;
-			return defName == CryingDefName || defName == GigglingDefName;
+			return ToddlersExpansionSettings.EnableNonBlockingBabyFits
+				&& mentalStateDef?.defName is CryingDefName or GigglingDefName;
 		}
 	}
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Core;
 using RimWorld;
 using RimWorld.Planet;
 using UnityEngine;
@@ -11,7 +12,6 @@ using Verse.AI;
 
 namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 {
-	[HarmonyPatch(typeof(Caravan_NeedsTracker))]
 	public static class Caravan_NeedsTracker_ToddlerFeeding_Patch
 	{
 		private const string ToddlerLearningUtilityTypeName = "Toddlers.ToddlerLearningUtility";
@@ -20,10 +20,16 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		private static Type _toddlerLearningUtilityType;
 		private static MethodInfo _canFeedSelfMethod;
 
-		// 在TrySatisfyPawnsNeeds之后检查toddler喂食
-		[HarmonyPatch(nameof(Caravan_NeedsTracker.TrySatisfyPawnsNeeds))]
-		[HarmonyPostfix]
-		public static void Postfix(Caravan_NeedsTracker __instance, int delta)
+		public static void Init(HarmonyLib.Harmony harmony)
+		{
+			MethodInfo target = AccessTools.Method(typeof(Caravan_NeedsTracker), nameof(Caravan_NeedsTracker.TrySatisfyPawnsNeeds), new[] { typeof(int) });
+			if (target != null)
+			{
+				harmony.Patch(target, postfix: new HarmonyMethod(typeof(Caravan_NeedsTracker_ToddlerFeeding_Patch), nameof(Postfix)));
+			}
+		}
+
+		private static void Postfix(Caravan_NeedsTracker __instance)
 		{
 			try
 			{
@@ -39,7 +45,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				}
 
 				// 尝试处理所有toddlers的喂食
-				TryFeedAllToddlers(__instance, delta);
+				TryFeedAllToddlers(__instance);
 			}
 			catch (Exception ex)
 			{
@@ -58,14 +64,15 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 		}
 
-		private static void TryFeedAllToddlers(Caravan_NeedsTracker needsTracker, int delta)
+		private static void TryFeedAllToddlers(Caravan_NeedsTracker needsTracker)
 		{
 			List<Pawn> pawnsListForReading = needsTracker.caravan.PawnsListForReading;
 
 			for (int i = 0; i < pawnsListForReading.Count; i++)
 			{
 				Pawn pawn = pawnsListForReading[i];
-				if (pawn.Dead || !ToddlersCompatUtility.IsToddler(pawn) || pawn.needs?.food == null)
+				if (pawn.Dead || !ToddlersCompatUtility.IsToddler(pawn) || pawn.needs?.food == null
+					|| !ToddlerFoodSettings.FeedInCaravan.Allows(pawn))
 				{
 					continue;
 				}
@@ -84,8 +91,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 					continue;
 				}
 
-				// 尝试协助喂食
-				TryFeedToddlerWithAssistance(needsTracker, pawn, food, delta);
+				TryFeedToddlerWithAssistance(needsTracker, pawn, food);
 			}
 		}
 
@@ -108,13 +114,14 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 		}
 
-		private static void TryFeedToddlerWithAssistance(Caravan_NeedsTracker needsTracker, Pawn toddler, Need_Food food, int delta)
+		private static void TryFeedToddlerWithAssistance(Caravan_NeedsTracker needsTracker, Pawn toddler, Need_Food food)
 		{
 			Caravan caravan = needsTracker.caravan;
 
 			// 查找婴儿食品
 			Thing babyFood = CaravanInventoryUtility.AllInventoryItems(caravan)
-				.FirstOrDefault(thing => thing.def == ThingDefOf.BabyFood && thing.stackCount > 0);
+				.FirstOrDefault(thing => thing.def == ThingDefOf.BabyFood && thing.stackCount > 0 && thing.IngestibleNow
+					&& toddler.WillEat(thing, careIfNotAcceptableForTitle: false));
 
 			if (babyFood == null)
 			{

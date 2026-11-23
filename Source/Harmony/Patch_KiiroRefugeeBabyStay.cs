@@ -1,5 +1,6 @@
 using System.Reflection;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Core;
 using Verse;
 
 namespace RimTalk_ToddlersExpansion.Harmony
@@ -40,7 +41,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void GeneratePawn_Postfix(ref Pawn __result)
 		{
-			if (!IsQuestBaby(__result))
+			if (!ToddlersExpansionSettings.EnableKiiroRefugeeProtection || !IsQuestBaby(__result))
 			{
 				return;
 			}

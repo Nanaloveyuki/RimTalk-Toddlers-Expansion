@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using RimTalk_ToddlersExpansion.Core;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -37,7 +38,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
                 return null;
             }
 
-            if (!ignoreRestrictions && (HasCooldown(pawn) || IsInBadCondition(pawn)))
+            if (!ignoreRestrictions && (!ToddlersExpansionSettings.EnableMidnightSnacks || HasCooldown(pawn) || IsInBadCondition(pawn)))
             {
                 reason = "normal midnight snack conditions not met";
                 return null;

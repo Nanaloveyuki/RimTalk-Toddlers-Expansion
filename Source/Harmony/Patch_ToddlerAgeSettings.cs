@@ -17,6 +17,16 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				harmony.Patch(toddlerMinAge, prefix: new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(ToddlerMinAge_Prefix)));
 			}
 
+			var reapplyAge = new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(ReapplyConfiguredAge)) { priority = Priority.Last };
+			var harCompat = AccessTools.TypeByName("Toddlers.HARCompat");
+			if (harCompat != null && AccessTools.DeclaredMethod(harCompat, "Init", System.Type.EmptyTypes) is MethodInfo initializeHar)
+			{
+				harmony.Patch(initializeHar, postfix: reapplyAge);
+			}
+
+			// Loaded pawns recalculate their life stage during deserialization.
+			harmony.Patch(AccessTools.DeclaredMethod(typeof(Game), nameof(Game.LoadGame)), prefix: reapplyAge);
+
 			MethodInfo recalculateLifeStageIndex = AccessTools.Method(typeof(Pawn_AgeTracker), "RecalculateLifeStageIndex");
 			if (recalculateLifeStageIndex == null)
 			{
@@ -38,6 +48,8 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				postfix: new HarmonyMethod(typeof(Patch_ToddlerAgeSettings), nameof(RecalculateLifeStageIndex_Postfix)),
 				transpiler: transpiler);
 		}
+
+		private static void ReapplyConfiguredAge() => ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge(forceReapply: true);
 
 		private static bool ToddlerMinAge_Prefix(Pawn __0, ref float __result)
 		{

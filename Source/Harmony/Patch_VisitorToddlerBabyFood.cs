@@ -6,32 +6,18 @@ using HarmonyLib;
 using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimWorld;
-using UnityEngine;
 using Verse;
 using Verse.AI.Group;
 
 namespace RimTalk_ToddlersExpansion.Harmony
 {
-	/// <summary>
-	/// 修复Hospitality mod兼容性问题：
-	/// Hospitality的访客生成逻辑会截断我们注入的toddler pawns，
-	/// 导致来访的幼儿没有婴儿食品。
-	///
-	/// 此补丁在toddler实际spawn到地图后：
-	/// 1. 检查并补充婴儿食品
-	/// 2. 尝试为未被背负的幼儿分配背负关系
-	/// </summary>
 	public static class Patch_VisitorToddlerBabyFood
 	{
-		private const float BabyFoodBaseUnits = 5f;
-		private const float BabyFoodUnitsPerToddlerAgeYear = 2f;
-		private const float MinBabyFoodUnits = 3f;
-		private const float MaxBabyFoodUnits = 15f;
 		private const int CarryAssignmentDelayTicks = 60;
 		private const int CarryAssignmentRetryTicks = 30;
 		private const int MaxCarryAssignmentRetries = 8;
 
-		// 缓存已经处理过的pawn，避免重复添加食品
+		private static readonly HashSet<int> _processedFoodPawnIds = new HashSet<int>();
 		private static HashSet<int> _processedPawnIds = new HashSet<int>();
 		// 缓存已经处理过背负关系的pawn
 		private static HashSet<int> _processedCarryingIds = new HashSet<int>();
@@ -55,7 +41,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		public static void Init(HarmonyLib.Harmony harmony)
 		{
-			// Patch GenSpawn.Spawn 来捕获所有pawn的spawn
+			// Some visitor mods create pawns without using the group generator.
 			MethodInfo spawnMethod = AccessTools.Method(typeof(GenSpawn), "Spawn", 
 				new[] { typeof(Thing), typeof(IntVec3), typeof(Map), typeof(Rot4), typeof(WipeMode), typeof(bool), typeof(bool) });
 			
@@ -75,17 +61,9 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			}
 		}
 
-		private static void GenSpawn_Spawn_Postfix(Thing __result)
+		private static void GenSpawn_Spawn_Postfix(Thing __result, bool respawningAfterLoad)
 		{
-			// 快速类型检查 - 大部分spawn的东西不是Pawn
-			if (__result == null || !(__result is Pawn pawn))
-			{
-				return;
-			}
-
-			// 快速排除 - 大部分pawn不是baby/toddler阶段
-			// 这个检查非常轻量，避免后续更重的检查
-			if (!pawn.RaceProps?.Humanlike == true)
+			if (__result is not Pawn pawn || pawn.RaceProps?.Humanlike != true)
 			{
 				return;
 			}
@@ -101,14 +79,16 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				}
 			}
 
-			// 检查是否已经处理过（在更重的检查之前）
+			CleanupCacheIfNeeded();
+			if (!respawningAfterLoad)
+			{
+				TrySupplyBabyFoodOnMap(pawn);
+			}
+
 			if (_processedPawnIds.Contains(pawn.thingIDNumber))
 			{
 				return;
 			}
-
-			// 清理过期的缓存
-			CleanupCacheIfNeeded();
 
 			// 检查是否是访客幼儿（包含更多条件检查）
 			if (!IsFriendlyYoungVisitor(pawn))
@@ -120,15 +100,17 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			TryNormalizeVisitorTradeSilver(pawn);
 			_processedPawnIds.Add(pawn.thingIDNumber);
 
-			// 检查并补充婴儿食品
-			if (IsVisitorToddler(pawn))
+			bool isToddler = ToddlersCompatUtility.IsToddlerOrBaby(pawn);
+			if (isToddler)
 			{
-				TryEnsureBabyFood(pawn);
 				ToddlerPawnGenerationUtility.EnsureToddlerFallbackApparel(pawn, pawn.MapHeld?.Tile ?? -1);
 			}
 			else
 			{
-				TryEnsureChildTravelFood(pawn);
+				if (!respawningAfterLoad)
+				{
+					TryEnsureChildTravelFood(pawn);
+				}
 				ToddlerPawnGenerationUtility.EnsureChildFallbackApparel(pawn);
 			}
 
@@ -136,10 +118,23 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 			// 延后处理背负关系（需要等其他成员也spawn完成）
 			// 使用延迟调用，在下一帧处理背负关系
-			if (IsVisitorToddler(pawn))
+			if (isToddler)
 			{
 				TryScheduleCarryingAssignment(pawn);
 			}
+		}
+
+		internal static void TrySupplyBabyFoodOnMap(Pawn pawn)
+		{
+			if (pawn?.RaceProps?.Humanlike != true
+				|| !ToddlerFoodSettings.AllowsOnPlayerHome(ToddlerFoodSettings.SupplyFood, pawn)
+				|| !ToddlersCompatUtility.IsToddlerOrBaby(pawn)
+				|| !_processedFoodPawnIds.Add(pawn.thingIDNumber))
+			{
+				return;
+			}
+
+			ToddlerPawnGenerationUtility.TryTopUpBabyFood(pawn);
 		}
 
 		/// <summary>
@@ -408,76 +403,6 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			ToddlerPawnGenerationUtility.TryInjectChildTravelFood(child, groupMembers);
 		}
 
-		private static void TryEnsureBabyFood(Pawn toddler)
-		{
-			if (toddler == null || toddler.inventory == null)
-			{
-				return;
-			}
-
-			// 检查是否已经有婴儿食品
-			int existingFoodCount = GetExistingBabyFoodCount(toddler);
-			if (existingFoodCount >= MinBabyFoodUnits)
-			{
-				if (ToddlersExpansionSettings.ShouldEmitVerboseDebugLogs)
-				{
-					Log.Message($"[RimTalk_ToddlersExpansion] 访客幼儿 {toddler.Name} 已有 {existingFoodCount} 个婴儿食品，无需补充");
-				}
-				return;
-			}
-
-			// 计算需要的婴儿食品数量
-			float ageYears = toddler.ageTracker?.AgeBiologicalYearsFloat ?? 1f;
-			float targetFoodUnits = BabyFoodBaseUnits + (ageYears * BabyFoodUnitsPerToddlerAgeYear);
-			targetFoodUnits = Mathf.Clamp(targetFoodUnits, MinBabyFoodUnits, MaxBabyFoodUnits);
-
-			int targetCount = Mathf.RoundToInt(targetFoodUnits);
-			int toAdd = targetCount - existingFoodCount;
-
-			if (toAdd <= 0)
-			{
-				return;
-			}
-
-			try
-			{
-				Thing babyFood = ThingMaker.MakeThing(ThingDefOf.BabyFood);
-				if (babyFood != null)
-				{
-					babyFood.stackCount = toAdd;
-					toddler.inventory.innerContainer.TryAdd(babyFood);
-
-					if (ToddlersExpansionSettings.ShouldEmitVerboseDebugLogs)
-					{
-						Log.Message($"[RimTalk_ToddlersExpansion] 为访客幼儿 {toddler.Name} 补充了 {toAdd} 个婴儿食品 (原有: {existingFoodCount}, 目标: {targetCount})");
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.Warning($"[RimTalk_ToddlersExpansion] 为访客幼儿补充婴儿食品失败: {ex.Message}");
-			}
-		}
-
-		private static int GetExistingBabyFoodCount(Pawn pawn)
-		{
-			if (pawn?.inventory?.innerContainer == null)
-			{
-				return 0;
-			}
-
-			int count = 0;
-			foreach (Thing thing in pawn.inventory.innerContainer)
-			{
-				if (thing.def == ThingDefOf.BabyFood)
-				{
-					count += thing.stackCount;
-				}
-			}
-
-			return count;
-		}
-
 		private static void TryApplyNewEnvironmentMood(Pawn pawn)
 		{
 			if (!ShouldReceiveNewEnvironmentMood(pawn))
@@ -574,8 +499,9 @@ namespace RimTalk_ToddlersExpansion.Harmony
 			
 			// 清理缓存中不再存在的pawn IDs
 			// 为了简单起见，我们只在缓存过大时清空
-			if (_processedPawnIds.Count > 1000 || _processedCarryingIds.Count > 1000)
+			if (_processedPawnIds.Count > 1000 || _processedCarryingIds.Count > 1000 || _processedFoodPawnIds.Count > 1000)
 			{
+				_processedFoodPawnIds.Clear();
 				_processedPawnIds.Clear();
 				_processedCarryingIds.Clear();
 				
@@ -591,6 +517,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 		/// </summary>
 		public static void ClearCache()
 		{
+			_processedFoodPawnIds.Clear();
 			_processedPawnIds.Clear();
 			_processedCarryingIds.Clear();
 			_pendingCarryAssignments.Clear();

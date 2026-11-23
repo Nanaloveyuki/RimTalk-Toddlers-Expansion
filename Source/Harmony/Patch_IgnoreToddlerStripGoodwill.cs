@@ -1,6 +1,7 @@
 using HarmonyLib;
-using RimWorld;
+using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
+using RimWorld;
 using Verse;
 
 namespace RimTalk_ToddlersExpansion.Harmony
@@ -30,7 +31,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void Strip_Prefix(Pawn __instance, ref bool notifyFaction)
 		{
-			if (!notifyFaction || __instance == null)
+			if (!ToddlersExpansionSettings.EnableIgnoreBabyStripGoodwill || !notifyFaction || __instance == null)
 			{
 				return;
 			}
@@ -46,7 +47,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static bool Notify_MemberStripped_Prefix(Pawn member, Faction violator)
 		{
-			if (member == null || violator != Faction.OfPlayer)
+			if (!ToddlersExpansionSettings.EnableIgnoreBabyStripGoodwill || member == null || violator != Faction.OfPlayer)
 			{
 				return true;
 			}

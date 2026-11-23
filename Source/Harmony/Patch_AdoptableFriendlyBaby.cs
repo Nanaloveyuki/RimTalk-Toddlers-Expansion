@@ -1,5 +1,6 @@
 using System.Text;
 using HarmonyLib;
+using RimTalk_ToddlersExpansion.Core;
 using RimWorld;
 using Verse;
 
@@ -18,7 +19,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void AdoptableBy_Postfix(Pawn __instance, Faction by, StringBuilder reason, ref bool __result)
 		{
-			if (__result)
+			if (__result || !ToddlersExpansionSettings.EnableFriendlyBabyAdoption)
 			{
 				return;
 			}

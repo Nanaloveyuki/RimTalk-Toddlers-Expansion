@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LanguageData>
+  <RimTalk_ToddlersExpansion_YoungPawn_BabyHair>Baby Hair</RimTalk_ToddlersExpansion_YoungPawn_BabyHair>
+  <RimTalk_ToddlersExpansion_YoungPawn_Behavior>Behavior &amp; Map Exit</RimTalk_ToddlersExpansion_YoungPawn_Behavior>
+  <RimTalk_ToddlersExpansion_YoungPawn_Prisoner>Prisoners</RimTalk_ToddlersExpansion_YoungPawn_Prisoner>
+  <RimTalk_ToddlersExpansion_YoungPawn_Slave>Slaves</RimTalk_ToddlersExpansion_YoungPawn_Slave>
+  <RimTalk_ToddlersExpansion_YoungPawn_Colonist>Colonists</RimTalk_ToddlersExpansion_YoungPawn_Colonist>
+  <RimTalk_ToddlersExpansion_YoungPawn_NonColonist>Non-colonists</RimTalk_ToddlersExpansion_YoungPawn_NonColonist>
+  <RimTalk_ToddlersExpansion_YoungPawn_NoFaction>No faction</RimTalk_ToddlersExpansion_YoungPawn_NoFaction>
+  <RimTalk_ToddlersExpansion_YoungPawn_MapName>Map {0}</RimTalk_ToddlersExpansion_YoungPawn_MapName>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairGroupDefaults>Show hair by default</RimTalk_ToddlersExpansion_YoungPawn_HairGroupDefaults>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairGroupTooltip>Show the assigned hairstyle on babies and toddlers under age 3 in this group. Individual choices take priority.</RimTalk_ToddlersExpansion_YoungPawn_HairGroupTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairIndividual>Babies and toddlers on loaded maps</RimTalk_ToddlersExpansion_YoungPawn_HairIndividual>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairIndividualDesc>These choices are saved with this game. Showing hair uses the pawn’s assigned hairstyle.</RimTalk_ToddlersExpansion_YoungPawn_HairIndividualDesc>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairLoadGame>Load a game to set hair for individual babies and toddlers.</RimTalk_ToddlersExpansion_YoungPawn_HairLoadGame>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairNoBabies>There are no babies or toddlers on the loaded maps.</RimTalk_ToddlersExpansion_YoungPawn_HairNoBabies>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairDefault>Use default</RimTalk_ToddlersExpansion_YoungPawn_HairDefault>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairShow>Show hair</RimTalk_ToddlersExpansion_YoungPawn_HairShow>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairHide>Hide hair</RimTalk_ToddlersExpansion_YoungPawn_HairHide>
+  <RimTalk_ToddlersExpansion_YoungPawn_HairPawnDetails>{0} · {1} · {2} · {3} days old\n{4} · #{5}</RimTalk_ToddlersExpansion_YoungPawn_HairPawnDetails>
+  <RimTalk_ToddlersExpansion_YoungPawn_MapExit>Leaving the map</RimTalk_ToddlersExpansion_YoungPawn_MapExit>
+  <RimTalk_ToddlersExpansion_YoungPawn_AllowMapExit>Allow young pawns to leave on their own</RimTalk_ToddlersExpansion_YoungPawn_AllowMapExit>
+  <RimTalk_ToddlersExpansion_YoungPawn_AllowMapExitTooltip>Allow babies and toddlers in this group to walk to an exit when they have no other duty, or when the mod sends a straggler away. Applies to new jobs. Releases, direct orders and scheduled group departures work as usual.</RimTalk_ToddlersExpansion_YoungPawn_AllowMapExitTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_SupplyFood>Provide food supplies</RimTalk_ToddlersExpansion_YoungPawn_SupplyFood>
+  <RimTalk_ToddlersExpansion_YoungPawn_SupplyFoodTooltip>Give eligible young pawns food when they arrive on a colony map or join a traveling group. Outsiders qualify if their faction is non-hostile. Traveling children may receive portable rations.</RimTalk_ToddlersExpansion_YoungPawn_SupplyFoodTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarried>Feed while carried</RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarried>
+  <RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarriedTooltip>On colony maps, carried babies and toddlers in this group use suitable baby food from their own or their carrier’s inventory when hungry. Outsiders qualify if their faction is non-hostile.</RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarriedTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_FeedInCaravan>Help feed toddlers in caravans</RimTalk_ToddlersExpansion_YoungPawn_FeedInCaravan>
+  <RimTalk_ToddlersExpansion_YoungPawn_FeedInCaravanTooltip>Player caravans use their baby food to help feed hungry toddlers who have yet to learn to eat by themselves.</RimTalk_ToddlersExpansion_YoungPawn_FeedInCaravanTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_MidnightSnacks>Sneak a snack</RimTalk_ToddlersExpansion_YoungPawn_MidnightSnacks>
+  <RimTalk_ToddlersExpansion_YoungPawn_MidnightSnacksTooltip>Children and toddlers in the colony may sneak a snack when idle at certain hours.</RimTalk_ToddlersExpansion_YoungPawn_MidnightSnacksTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_AutomaticToddlerBathing>Bathe on their own</RimTalk_ToddlersExpansion_YoungPawn_AutomaticToddlerBathing>
+  <RimTalk_ToddlersExpansion_YoungPawn_AutomaticToddlerBathingTooltip>With Dubs Bad Hygiene active, eligible toddlers may look for a place to bathe on their own.</RimTalk_ToddlersExpansion_YoungPawn_AutomaticToddlerBathingTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_NatureRunningFollowers>Follow children on nature runs</RimTalk_ToddlersExpansion_YoungPawn_NatureRunningFollowers>
+  <RimTalk_ToddlersExpansion_YoungPawn_NatureRunningFollowersTooltip>Nearby toddlers and children may follow a child when they start nature running.</RimTalk_ToddlersExpansion_YoungPawn_NatureRunningFollowersTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_BabyCarryDesire>Ask to be held</RimTalk_ToddlersExpansion_YoungPawn_BabyCarryDesire>
+  <RimTalk_ToddlersExpansion_YoungPawn_BabyCarryDesireTooltip>Babies and toddlers in the colony may cry to be picked up. A nearby caregiver can respond.</RimTalk_ToddlersExpansion_YoungPawn_BabyCarryDesireTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_FamilyBedroomThoughts>Family bedroom moods</RimTalk_ToddlersExpansion_YoungPawn_FamilyBedroomThoughts>
+  <RimTalk_ToddlersExpansion_YoungPawn_FamilyBedroomThoughtsTooltip>Family members and young children get the mod’s bedroom mood effects based on who sleeps in the room.</RimTalk_ToddlersExpansion_YoungPawn_FamilyBedroomThoughtsTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_FriendlyBabyAdoption>Adopt friendly babies</RimTalk_ToddlersExpansion_YoungPawn_FriendlyBabyAdoption>
+  <RimTalk_ToddlersExpansion_YoungPawn_FriendlyBabyAdoptionTooltip>Allow adoption of babies under one year old from non-hostile factions. Prisoners use the usual recruitment options.</RimTalk_ToddlersExpansion_YoungPawn_FriendlyBabyAdoptionTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_IgnoreBabyStripGoodwill>Prevent goodwill loss when stripping babies and toddlers</RimTalk_ToddlersExpansion_YoungPawn_IgnoreBabyStripGoodwill>
+  <RimTalk_ToddlersExpansion_YoungPawn_IgnoreBabyStripGoodwillTooltip>Stripping a baby or toddler’s apparel preserves their faction’s goodwill.</RimTalk_ToddlersExpansion_YoungPawn_IgnoreBabyStripGoodwillTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_KiiroRefugeeProtection>Keep Kiiro orphan quest babies on the map</RimTalk_ToddlersExpansion_YoungPawn_KiiroRefugeeProtection>
+  <RimTalk_ToddlersExpansion_YoungPawn_KiiroRefugeeProtectionTooltip>Babies who arrive in future Kiiro orphan quests temporarily collapse and stay where they can be adopted.</RimTalk_ToddlersExpansion_YoungPawn_KiiroRefugeeProtectionTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_NonBlockingBabyFits>Let babies take part while crying or giggling</RimTalk_ToddlersExpansion_YoungPawn_NonBlockingBabyFits>
+  <RimTalk_ToddlersExpansion_YoungPawn_NonBlockingBabyFitsTooltip>Babies can still take part in play and certain group activities while crying or giggling. They also stay aboard transporters during these fits.</RimTalk_ToddlersExpansion_YoungPawn_NonBlockingBabyFitsTooltip>
+</LanguageData>

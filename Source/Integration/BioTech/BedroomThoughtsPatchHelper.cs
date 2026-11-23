@@ -1,5 +1,6 @@
-using RimWorld;
+using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
+using RimWorld;
 using Verse;
 
 namespace RimTalk_ToddlersExpansion.Integration.BioTech
@@ -8,7 +9,7 @@ namespace RimTalk_ToddlersExpansion.Integration.BioTech
 	{
 		public static bool ShouldReplaceWithMyBabyThought(Pawn pawn, Room roomOrBedRoom)
 		{
-			if (pawn == null || roomOrBedRoom == null || roomOrBedRoom.PsychologicallyOutdoors)
+			if (!ToddlersExpansionSettings.EnableFamilyBedroomThoughts || pawn == null || roomOrBedRoom == null || roomOrBedRoom.PsychologicallyOutdoors)
 			{
 				return false;
 			}

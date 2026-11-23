@@ -24,8 +24,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 			}
 
 			RegisterPage(owner, "growth", "RimTalk_ToddlersExpansion_Iris_Growth", DrawGrowth);
+			RegisterPage(owner, "baby-hair", YoungPawnSettingsKey + "BabyHair", DrawBabyAppearanceSettingsSection);
 			RegisterPage(owner, "play", "RimTalk_ToddlersExpansion_Iris_Play", DrawPlay);
-			RegisterPage(owner, "interactions", "RimTalk_ToddlersExpansion_Interaction_Settings_Header", DrawInteractions);
+			RegisterPage(owner, "behavior", YoungPawnSettingsKey + "Behavior", DrawBehavior);
+			RegisterPage(owner, "interactions", "RimTalk_ToddlersExpansion_Interaction_Settings_Header", DrawInteractionSettingsSection);
 			RegisterPage(owner, "visitors", "RimTalk_ToddlersExpansion_Iris_Visitors", list => DrawCaravanGenerationSettingsSection(list, Settings));
 			RegisterPage(owner, "outings", "RimTalk_ToddlersExpansion_Settings_Page2", list => DrawOutingSettingsSection(list, Settings));
 			RegisterPage(owner, "animations", "RimTalk_ToddlersExpansion_Settings_Page3",
@@ -51,7 +53,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 		{
 			DrawLanguageSettingsSection(list);
 			DrawFeedingSettingsSection(list);
-			DrawBabyAppearanceSettingsSection(list);
 			DrawBabyCrySettingsSection(list);
 		}
 
@@ -61,10 +62,10 @@ namespace RimTalk_ToddlersExpansion.Integration.Iris
 			DrawMishapEventSettingsSection(list);
 		}
 
-		private static void DrawInteractions(SettingsListing list)
+		private static void DrawBehavior(SettingsListing list)
 		{
 			DrawBehaviorSettingsSection(list);
-			DrawInteractionSettingsSection(list);
+			DrawMapExitSettingsSection(list);
 		}
 	}
 }

@@ -47,21 +47,21 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			return _appliedToddlerAges.TryGetValue(stage, out minAge) && stage.minAge == minAge;
 		}
 
-		public static void ApplyConfiguredToddlerAge(bool refreshExistingPawns)
+		public static void ApplyConfiguredToddlerAge(bool forceReapply = false)
 		{
 			int targetDays = ToddlersExpansionSettings.GetNewbornToToddlerDays();
-			if (_lastAppliedDays == targetDays && !refreshExistingPawns)
+			if (_lastAppliedDays == targetDays && !forceReapply)
 			{
 				return;
 			}
 
 			float requestedYears = targetDays / DaysPerYear;
 			int updatedRaceStages = ApplyRaceLifeStageOverrides(requestedYears);
+			if (updatedRaceStages > 0 || _lastAppliedDays != targetDays)
+			{
+				Log.Message($"[RimTalk_ToddlersExpansion][ToddlerAge] Applied newborn-to-toddler threshold: {targetDays} day(s) ({requestedYears:0.###} years); updated race life stages: {updatedRaceStages}.");
+			}
 			_lastAppliedDays = targetDays;
-			Log.Message($"[RimTalk_ToddlersExpansion][ToddlerAge] Applied newborn-to-toddler threshold: {targetDays} day(s) ({requestedYears:0.###} years); updated race life stages: {updatedRaceStages}; refreshExistingPawns={refreshExistingPawns}.");
-
-			// Do not force existing pawns to recalculate here. RimWorld's normal age tick path will start
-			// the toddler life stage when the pawn naturally crosses the configured threshold.
 		}
 
 		private static int ApplyRaceLifeStageOverrides(float requestedYears)
@@ -113,13 +113,18 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				float oldAge = toddler.minAge;
 				float expectedAge = _appliedToddlerAges.TryGetValue(toddler, out float lastAppliedAge)
 					? lastAppliedAge : DefaultToddlerMinAge;
-				if (oldAge != expectedAge || oldAge == targetAge)
+				if (oldAge != expectedAge && oldAge != DefaultToddlerMinAge)
 				{
 					continue;
 				}
 
 				object info = alienRaceInfo?[def];
-				if (info != null && !TryUpdateHarToddlerMinAge(info, toddler, oldAge, targetAge))
+				if (info != null && !TryUpdateHarToddlerMinAge(info, toddler, expectedAge, targetAge))
+				{
+					continue;
+				}
+
+				if (oldAge == targetAge)
 				{
 					continue;
 				}
@@ -162,19 +167,23 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			return -1;
 		}
 
-		private static bool TryUpdateHarToddlerMinAge(object info, LifeStageAge toddlerStage, float oldAge, float newAge)
+		private static bool TryUpdateHarToddlerMinAge(object info, LifeStageAge toddlerStage, float expectedAge, float newAge)
 		{
 			Type type = info.GetType();
 			FieldInfo stageField = AccessTools.Field(type, "lsa_Toddler");
 			FieldInfo ageField = AccessTools.Field(type, "toddlerMinAge");
 			if (!ReferenceEquals(stageField?.GetValue(info), toddlerStage)
 				|| ageField?.FieldType != typeof(float) || ageField.IsInitOnly || ageField.IsStatic
-				|| !(ageField.GetValue(info) is float cachedAge) || cachedAge != oldAge)
+				|| ageField.GetValue(info) is not float cachedAge
+				|| (cachedAge != expectedAge && cachedAge != DefaultToddlerMinAge))
 			{
 				return false;
 			}
 
-			ageField.SetValue(info, newAge);
+			if (cachedAge != newAge)
+			{
+				ageField.SetValue(info, newAge);
+			}
 			return true;
 		}
 

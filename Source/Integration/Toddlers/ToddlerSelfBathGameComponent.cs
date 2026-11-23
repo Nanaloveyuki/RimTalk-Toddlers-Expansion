@@ -28,7 +28,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		public override void GameComponentTick()
 		{
 			base.GameComponentTick();
-			if (_trackedSelfBathCandidates.Count == 0 || Find.TickManager == null)
+			if (!ToddlersExpansionSettings.EnableAutomaticToddlerBathing || _trackedSelfBathCandidates.Count == 0 || Find.TickManager == null)
 			{
 				return;
 			}

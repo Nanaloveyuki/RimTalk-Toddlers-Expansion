@@ -25,7 +25,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		internal static void Tick(int elapsedTicks)
 		{
-			if (Find.TickManager == null || _trackedDesireCandidates.Count == 0)
+			if (!ToddlersExpansionSettings.EnableBabyCarryDesire || Find.TickManager == null || _trackedDesireCandidates.Count == 0)
 			{
 				return;
 			}

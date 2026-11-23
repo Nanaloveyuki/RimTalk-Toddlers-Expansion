@@ -219,8 +219,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				return false;
 			}
 
-			// Avoid pick-up/dismount loops: try to feed carried visitor toddlers first.
-			if (TryFeedHungryVisitorToddler(toddler, food))
+			if (TryFeedHungryCarriedToddler(toddler, food))
 			{
 				return food.CurLevelPercentage < HungryThreshold;
 			}
@@ -345,18 +344,24 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			return jobDef == JobDefOf.LayDown;
 		}
 
-		private static bool TryFeedHungryVisitorToddler(Pawn toddler, Need_Food food)
+		private static bool TryFeedHungryCarriedToddler(Pawn toddler, Need_Food food)
 		{
-			if (!IsVisitorToddlerOnPlayerMap(toddler) || !ToddlerCarryingUtility.IsBeingCarried(toddler))
+			if (!ToddlerFoodSettings.AllowsOnPlayerHome(ToddlerFoodSettings.FeedWhileCarried, toddler)
+				|| !ToddlersCompatUtility.IsToddlerOrBaby(toddler))
 			{
 				return false;
 			}
 
-			Thing babyFood = TryFindBabyFoodInInventory(toddler);
-			if (babyFood == null)
+			Pawn carrier = ToddlerCarryingUtility.GetCarrier(toddler);
+			if (carrier?.Map != toddler.Map)
 			{
-				Pawn carrier = ToddlerCarryingUtility.GetCarrier(toddler);
-				babyFood = TryFindBabyFoodInInventory(carrier);
+				return false;
+			}
+
+			Thing babyFood = TryFindBabyFoodInInventory(toddler, toddler);
+			if (babyFood == null && carrier.Faction?.HostileTo(toddler.HostFaction ?? toddler.Faction) != true)
+			{
+				babyFood = TryFindBabyFoodInInventory(carrier, toddler);
 			}
 
 			if (babyFood == null)
@@ -392,44 +397,25 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			}
 		}
 
-		private static Thing TryFindBabyFoodInInventory(Pawn pawn)
+		private static Thing TryFindBabyFoodInInventory(Pawn inventoryOwner, Pawn eater)
 		{
-			if (pawn?.inventory?.innerContainer == null)
+			var inventory = inventoryOwner?.inventory?.innerContainer;
+			if (inventory == null)
 			{
 				return null;
 			}
 
-			for (int i = 0; i < pawn.inventory.innerContainer.Count; i++)
+			for (int i = 0; i < inventory.Count; i++)
 			{
-				Thing thing = pawn.inventory.innerContainer[i];
-				if (thing != null && thing.def == ThingDefOf.BabyFood && thing.stackCount > 0)
+				Thing thing = inventory[i];
+				if (thing != null && thing.def == ThingDefOf.BabyFood && thing.stackCount > 0 && thing.IngestibleNow
+					&& eater.WillEat(thing, careIfNotAcceptableForTitle: false))
 				{
 					return thing;
 				}
 			}
 
 			return null;
-		}
-
-		private static bool IsVisitorToddlerOnPlayerMap(Pawn toddler)
-		{
-			if (toddler == null || toddler.Dead || toddler.Destroyed || !ToddlersCompatUtility.IsToddlerOrBaby(toddler))
-			{
-				return false;
-			}
-
-			if (toddler.Map == null || !toddler.Map.IsPlayerHome)
-			{
-				return false;
-			}
-
-			Faction faction = toddler.Faction;
-			if (faction == null || faction == Faction.OfPlayer || faction.HostileTo(Faction.OfPlayer))
-			{
-				return false;
-			}
-
-			return !toddler.IsPrisoner && !toddler.IsPrisonerOfColony;
 		}
 	}
 }
