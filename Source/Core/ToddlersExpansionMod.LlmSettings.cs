@@ -8,7 +8,7 @@ namespace RimTalk_ToddlersExpansion.Core
 {
 	public sealed partial class ToddlersExpansionMod
 	{
-		private static void DrawLlmSettingsSection(Listing_Standard listingStandard, ToddlersExpansionSettings settings)
+		internal static void DrawLlmSettingsSection(Listing_Standard listingStandard, ToddlersExpansionSettings settings)
 		{
 			bool rimTalkActive = RimTalkCompatUtility.IsRimTalkActive;
 			listingStandard.Label("RimTalk_ToddlersExpansion_Llm_Settings_Header".Translate());
@@ -115,14 +115,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				System.Enum.GetValues(typeof(ToddlersExpansionStandaloneLlmProvider)))
 			{
 				ToddlersExpansionStandaloneLlmProvider captured = provider;
-				options.Add(new FloatMenuOption(provider.GetLabel(), delegate
-				{
-					config.Provider = captured;
-					if (!config.RequiresCustomBaseUrl)
-					{
-						config.BaseUrl = string.Empty;
-					}
-				}));
+				options.Add(new FloatMenuOption(provider.GetLabel(), () => config.SelectProvider(captured)));
 			}
 
 			Find.WindowStack.Add(new FloatMenu(options));

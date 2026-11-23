@@ -2,6 +2,7 @@
   "target": "RTEContinue",
   "package_id": "cj.RimtalkToddlersExpansion.continue",
   "project": "Source/RimTalk_ToddlersExpansion.csproj",
+  "iris_menus_project": "Source/Integration/IrisMenus/RimTalk_ToddlersExpansion.IrisMenus.csproj",
   "files": [
     "About/About.xml",
     "About/Preview.png",
@@ -16,6 +17,8 @@
     "1.6/Assemblies/RimTalk_ToddlersExpansion.dll",
     "1.6/Assemblies/RimTalk_ToddlersExpansion.pdb",
     "1.7/Assemblies/RimTalk_ToddlersExpansion.dll",
-    "1.7/Assemblies/RimTalk_ToddlersExpansion.pdb"
+    "1.7/Assemblies/RimTalk_ToddlersExpansion.pdb",
+    "1.7/IrisMenus/Assemblies/RimTalk_ToddlersExpansion.IrisMenus.dll",
+    "1.7/IrisMenus/Assemblies/RimTalk_ToddlersExpansion.IrisMenus.pdb"
   ]
 }

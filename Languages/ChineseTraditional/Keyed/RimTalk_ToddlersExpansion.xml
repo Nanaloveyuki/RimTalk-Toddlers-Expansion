@@ -18,6 +18,14 @@
   <RimTalk_ToddlersExpansion_Settings_Page2>野游設置</RimTalk_ToddlersExpansion_Settings_Page2>
   <RimTalk_ToddlersExpansion_Settings_Page3>玩耍動畫</RimTalk_ToddlersExpansion_Settings_Page3>
   <RimTalk_ToddlersExpansion_Settings_Page4>對話設置</RimTalk_ToddlersExpansion_Settings_Page4>
+  <RimTalk_ToddlersExpansion_Iris_Growth>成長與照料</RimTalk_ToddlersExpansion_Iris_Growth>
+  <RimTalk_ToddlersExpansion_Iris_Play>玩耍與意外</RimTalk_ToddlersExpansion_Iris_Play>
+  <RimTalk_ToddlersExpansion_Iris_Visitors>訪客與商隊</RimTalk_ToddlersExpansion_Iris_Visitors>
+  <RimTalk_ToddlersExpansion_Iris_Performance>效能</RimTalk_ToddlersExpansion_Iris_Performance>
+  <RimTalk_ToddlersExpansion_Iris_ActivityText>活動文字</RimTalk_ToddlersExpansion_Iris_ActivityText>
+  <RimTalk_ToddlersExpansion_Iris_Dialogue>RimTalk 對話</RimTalk_ToddlersExpansion_Iris_Dialogue>
+  <RimTalk_ToddlersExpansion_Iris_SharedAnimations>通用玩耍動畫</RimTalk_ToddlersExpansion_Iris_SharedAnimations>
+  <RimTalk_ToddlersExpansion_Iris_YayoAnimations>Yayo 額外動畫</RimTalk_ToddlersExpansion_Iris_YayoAnimations>
   <RimTalk_ToddlersExpansion_Talk_Settings_Header>RimTalk 對話設置</RimTalk_ToddlersExpansion_Talk_Settings_Header>
   <RimTalk_ToddlersExpansion_Talk_Settings_Desc>分別控制各個 Event 類型 TalkRequest 入口是否發送。</RimTalk_ToddlersExpansion_Talk_Settings_Desc>
   <RimTalk_ToddlersExpansion_Talk_EnableSelfPlay>啟用獨自玩耍 Event 對話</RimTalk_ToddlersExpansion_Talk_EnableSelfPlay>

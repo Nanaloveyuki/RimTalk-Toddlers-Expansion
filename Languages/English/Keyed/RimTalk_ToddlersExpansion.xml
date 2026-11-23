@@ -18,6 +18,14 @@
   <RimTalk_ToddlersExpansion_Settings_Page2>Outing Destinations</RimTalk_ToddlersExpansion_Settings_Page2>
   <RimTalk_ToddlersExpansion_Settings_Page3>Animations</RimTalk_ToddlersExpansion_Settings_Page3>
   <RimTalk_ToddlersExpansion_Settings_Page4>Chat &amp; API</RimTalk_ToddlersExpansion_Settings_Page4>
+  <RimTalk_ToddlersExpansion_Iris_Growth>Growth &amp; Care</RimTalk_ToddlersExpansion_Iris_Growth>
+  <RimTalk_ToddlersExpansion_Iris_Play>Play &amp; Mishaps</RimTalk_ToddlersExpansion_Iris_Play>
+  <RimTalk_ToddlersExpansion_Iris_Visitors>Visitors &amp; Caravans</RimTalk_ToddlersExpansion_Iris_Visitors>
+  <RimTalk_ToddlersExpansion_Iris_Performance>Performance</RimTalk_ToddlersExpansion_Iris_Performance>
+  <RimTalk_ToddlersExpansion_Iris_ActivityText>Activity Text</RimTalk_ToddlersExpansion_Iris_ActivityText>
+  <RimTalk_ToddlersExpansion_Iris_Dialogue>RimTalk Dialogue</RimTalk_ToddlersExpansion_Iris_Dialogue>
+  <RimTalk_ToddlersExpansion_Iris_SharedAnimations>Shared play animations</RimTalk_ToddlersExpansion_Iris_SharedAnimations>
+  <RimTalk_ToddlersExpansion_Iris_YayoAnimations>Additional Yayo animations</RimTalk_ToddlersExpansion_Iris_YayoAnimations>
   <RimTalk_ToddlersExpansion_Llm_Settings_Header>LLM Activity Text Settings</RimTalk_ToddlersExpansion_Llm_Settings_Header>
   <RimTalk_ToddlersExpansion_Llm_Settings_Desc>RimTalk is optional. Use its API when installed, or configure a standalone API for short activity text.</RimTalk_ToddlersExpansion_Llm_Settings_Desc>
   <RimTalk_ToddlersExpansion_Llm_UseRimTalk>Use RimTalk API</RimTalk_ToddlersExpansion_Llm_UseRimTalk>

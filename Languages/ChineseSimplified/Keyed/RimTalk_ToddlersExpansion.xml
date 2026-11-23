@@ -17,6 +17,14 @@
   <RimTalk_ToddlersExpansion_Settings_Page2>野游设置</RimTalk_ToddlersExpansion_Settings_Page2>
   <RimTalk_ToddlersExpansion_Settings_Page3>玩耍动画</RimTalk_ToddlersExpansion_Settings_Page3>
   <RimTalk_ToddlersExpansion_Settings_Page4>聊天和API</RimTalk_ToddlersExpansion_Settings_Page4>
+  <RimTalk_ToddlersExpansion_Iris_Growth>成长与照料</RimTalk_ToddlersExpansion_Iris_Growth>
+  <RimTalk_ToddlersExpansion_Iris_Play>玩耍与意外</RimTalk_ToddlersExpansion_Iris_Play>
+  <RimTalk_ToddlersExpansion_Iris_Visitors>访客与商队</RimTalk_ToddlersExpansion_Iris_Visitors>
+  <RimTalk_ToddlersExpansion_Iris_Performance>性能</RimTalk_ToddlersExpansion_Iris_Performance>
+  <RimTalk_ToddlersExpansion_Iris_ActivityText>活动文本</RimTalk_ToddlersExpansion_Iris_ActivityText>
+  <RimTalk_ToddlersExpansion_Iris_Dialogue>RimTalk 对话</RimTalk_ToddlersExpansion_Iris_Dialogue>
+  <RimTalk_ToddlersExpansion_Iris_SharedAnimations>通用玩耍动画</RimTalk_ToddlersExpansion_Iris_SharedAnimations>
+  <RimTalk_ToddlersExpansion_Iris_YayoAnimations>Yayo 追加动画</RimTalk_ToddlersExpansion_Iris_YayoAnimations>
 
   <RimTalk_ToddlersExpansion_Talk_Settings_Header>RimTalk TalkRequest 发送设置</RimTalk_ToddlersExpansion_Talk_Settings_Header>
   <RimTalk_ToddlersExpansion_Talk_Settings_Desc>分别控制各个 Event 类型 TalkRequest 入口是否发送。</RimTalk_ToddlersExpansion_Talk_Settings_Desc>

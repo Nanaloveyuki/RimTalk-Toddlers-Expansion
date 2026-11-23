@@ -7,6 +7,7 @@
 - 需要生物科技（Biotech）DLC、Harmony 和 Toddlers。把本模组排在 Harmony 和 Toddlers 之后。
 - RimTalk 和 Interaction Bubbles 可选。启用其中任意一个时，把它排在本模组之前。
 - 支持 RimWorld 1.6 和 1.7。1.7 可使用兼容的 Toddlers，包括工坊的非官方 1.7 移植版 `3832132406`。两个工坊版本使用同一个包 ID，只安装适合当前游戏版本的一份。RimWorld 1.6 沿用原版。
+- RimWorld 1.7 可选用 IrisMenus。启用后，本模组的设置会在 IrisMenus 中按功能分成子页。关闭 IrisMenus 后仍可通过原有的四个标签页访问同一份设置。
 - 从原版换到 Continue 版时，先备份存档，再停用原版并启用 Continue 版。读档会显示模组列表变更，确认后即可继续。两个版本包含同名 Def，须择一启用。
 - RimWorld 1.7 首次载入 Continue 时，若新目录没有设置文件，会复制已安装原版的设置，包括独立 API 配置。已卸载原版时也会查找原 Steam 工坊目录 `3659064387` 对应的设置。RimWorld 1.6 或手动更名其他安装目录时，可在游戏关闭后把 `Config/Mod_<旧目录名>_ToddlersExpansionMod.xml` 复制为 `Config/Mod_<新目录名>_ToddlersExpansionMod.xml`，并保留已有的新设置。
 
@@ -23,6 +24,7 @@ bash scripts/deploy.sh --rimworld-dir "/path/to/RimWorld"
 - `--build-only` 只构建和打包。加上 `--skip-build` 可以直接打包仓库中的程序集。
 - `--preflight` 检查游戏路径和部署目标。`--target` 可以指定 `Mods` 下其他已安装的 Continue 目录。
 - 1.7 构建按顺序查找原版 Toddlers 的 1.7 程序集、非官方 1.7 移植版、原版的 1.6 程序集。Harmony 或 Toddlers 装在其他目录时，用 `--property HarmonyModDir=路径` 或 `--property ToddlersDir=路径` 指定。
+- 脚本会使用隔壁仓库或游戏目录中的 IrisMenus 1.7 程序集构建联动模块。也可通过 `--property IrisMenusAssemblyPath=路径` 指定。如果本地没有 IrisMenus，脚本会构建主体并打包仓库中的联动程序集。
 
 ## 玩法
 
@@ -36,5 +38,5 @@ bash scripts/deploy.sh --rimworld-dir "/path/to/RimWorld"
 
 启用 RimTalk 后，幼儿的语言学习进度会影响生成的对话，部分玩耍和照料互动也会触发对话。
 
-在模组设置的「聊天和API」页，可以为玩耍活动的简短描述选用 RimTalk API，也可以配置独立 LLM API。没有可用的 API 时，游戏会显示固定活动文本。
+在模组设置的「聊天和API」页（IrisMenus 中的「活动文本」），可以为玩耍活动的简短描述选用 RimTalk API，也可以配置独立 LLM API。没有可用的 API 时，游戏会显示固定活动文本。
 

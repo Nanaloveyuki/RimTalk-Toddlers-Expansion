@@ -28,7 +28,7 @@ DEPENDENCIES = {
         ("2903359152", "1.6/Assemblies/Toddlers.dll"),
     ),
 }
-PATH_PROPERTIES = {*DEPENDENCIES, "HarmonyAssemblyPath", "ToddlersAssemblyPath"}
+PATH_PROPERTIES = {*DEPENDENCIES, "HarmonyAssemblyPath", "ToddlersAssemblyPath", "IrisMenusAssemblyPath"}
 
 
 def local_path(value):
@@ -143,8 +143,18 @@ def build_17(game, args, config, output):
     for name, value in args.property:
         properties[name] = local_path(value) if name in PATH_PROPERTIES else value
     properties.update(RimWorldDir=game, GameVersion="1.7")
+    project = config["project"]
+    iris_assembly = Path("1.7/Assemblies/IrisMenus.dll")
+    if "IrisMenusAssemblyPath" not in properties:
+        for iris_root in (ROOT.parent / "RimworldMods/iris_menus", game / "Mods/IrisMenus"):
+            candidate = iris_root / iris_assembly
+            if candidate.is_file():
+                properties["IrisMenusAssemblyPath"] = candidate
+                break
+    if "IrisMenusAssemblyPath" in properties:
+        project = config["iris_menus_project"]
     subprocess.run(
-        [args.dotnet, "build", str(ROOT / config["project"]), "-c", args.configuration, "--nologo",
+        [args.dotnet, "build", str(ROOT / project), "-c", args.configuration, "--nologo",
          "-o", str(output), *(f"-p:{name}={value}" for name, value in properties.items())],
         cwd=ROOT,
         check=True,
@@ -156,7 +166,9 @@ def release_files(config, build_output):
     for entry in map(Path, config["files"]):
         source = ROOT / entry
         if build_output and entry.parts[0] == "1.7":
-            source = build_output / entry.name
+            built = build_output / entry.name
+            if entry.parts[1] != "IrisMenus" or built.is_file():
+                source = built
         reject_links(source)
         if source.is_dir():
             for item in sorted(source.rglob("*")):

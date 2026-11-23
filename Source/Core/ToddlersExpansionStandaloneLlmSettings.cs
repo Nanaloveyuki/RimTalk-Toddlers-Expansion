@@ -31,6 +31,15 @@ namespace RimTalk_ToddlersExpansion.Core
 			Provider == ToddlersExpansionStandaloneLlmProvider.Local ||
 			Provider == ToddlersExpansionStandaloneLlmProvider.Custom;
 
+		internal void SelectProvider(ToddlersExpansionStandaloneLlmProvider provider)
+		{
+			Provider = provider;
+			if (!RequiresCustomBaseUrl)
+			{
+				BaseUrl = string.Empty;
+			}
+		}
+
 		public string GetResolvedBaseUrl()
 		{
 			if (RequiresCustomBaseUrl)

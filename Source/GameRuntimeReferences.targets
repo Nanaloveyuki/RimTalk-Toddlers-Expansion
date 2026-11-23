@@ -1,0 +1,11 @@
+<Project>
+  <!-- Native mod assemblies can reference CoreLib directly. -->
+  <Target Name="UseGameRuntimeReferences" BeforeTargets="CoreCompile" Condition="Exists('$(RimWorldDir)/System.Private.CoreLib.dll')">
+    <ItemGroup>
+      <SdkFrameworkReferences Include="@(ReferencePathWithRefAssemblies)"
+                              Condition="'%(ReferencePathWithRefAssemblies.FrameworkReferenceName)' == 'Microsoft.NETCore.App' and Exists('$(RimWorldDir)/%(ReferencePathWithRefAssemblies.Filename)%(ReferencePathWithRefAssemblies.Extension)')" />
+      <ReferencePathWithRefAssemblies Remove="@(SdkFrameworkReferences)" />
+      <ReferencePathWithRefAssemblies Include="@(SdkFrameworkReferences->'$(RimWorldDir)/%(Filename)%(Extension)');$(RimWorldDir)/System.Private.*.dll" />
+    </ItemGroup>
+  </Target>
+</Project>
