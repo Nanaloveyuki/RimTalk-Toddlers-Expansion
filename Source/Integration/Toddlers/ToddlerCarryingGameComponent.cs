@@ -25,7 +25,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 		private List<Pawn> _savedCarriedToddlers = new List<Pawn>();
 		private List<Pawn> _savedCarriers = new List<Pawn>();
 		private readonly List<Pawn> _activeCarriedToddlers = new List<Pawn>(32);
-		private readonly List<Pawn> _activeCarriers = new List<Pawn>(32);
 		private readonly List<Pawn> _visitorRepickupCandidates = new List<Pawn>();
 		private readonly HashSet<Faction> _visitorFactionsWithAdult = new HashSet<Faction>();
 
@@ -206,12 +205,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				MaintainCarriedToddler(_activeCarriedToddlers[i]);
 			}
 
-			ToddlerCarryingTracker.CopyAllCarriersTo(_activeCarriers);
-			for (int i = 0; i < _activeCarriers.Count; i++)
-			{
-				MaintainCarrier(_activeCarriers[i]);
-			}
-
 			if (_needsCarryProtectionResync)
 			{
 				RemoveStaleCarryProtection();
@@ -250,34 +243,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				}
 				catch
 				{
-				}
-			}
-		}
-
-		private static void MaintainCarrier(Pawn carrier)
-		{
-			if (carrier == null || !carrier.Spawned)
-			{
-				return;
-			}
-
-			if (!ToddlerCarryingTracker.TryGetCarriedToddlersNoAlloc(carrier, out List<Pawn> toddlers))
-			{
-				return;
-			}
-
-			for (int i = toddlers.Count - 1; i >= 0; i--)
-			{
-				Pawn toddler = toddlers[i];
-				if (toddler == null || toddler.Dead || toddler.Destroyed || !toddler.Spawned)
-				{
-					ToddlerCarryingUtility.DismountToddler(toddler);
-					continue;
-				}
-
-				if (toddler.Map != carrier.Map || !ToddlerCarryingUtility.IsCarryRelationStillValid(carrier, toddler))
-				{
-					ToddlerCarryingUtility.DismountToddler(toddler);
 				}
 			}
 		}
