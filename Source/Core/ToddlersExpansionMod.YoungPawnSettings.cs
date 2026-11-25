@@ -94,13 +94,17 @@ namespace RimTalk_ToddlersExpansion.Core
 			DrawYoungPawnGroupSettings(list, "AllowMapExit", ToddlerExitSettings.AllowMapExit);
 		}
 
-		private static void DrawYoungPawnGroupSettings(SettingsListing list, string key, YoungPawnGroupSetting setting)
+		private static void DrawYoungPawnGroupSettings(SettingsListing list, string key, YoungPawnGroupSetting setting, bool includeNonColonists = true)
 		{
 			string feature = YoungPawnSettingsKey + key;
 			list.Label(feature.Translate());
 			string tooltip = (feature + "Tooltip").Translate();
 			foreach (YoungPawnGroup group in youngPawnGroups)
 			{
+				if (!includeNonColonists && group == YoungPawnGroup.NonColonist)
+				{
+					continue;
+				}
 				bool enabled = setting[group];
 				list.CheckboxLabeled(feature + group, (YoungPawnSettingsKey + group).Translate(), ref enabled, tooltip);
 				setting[group] = enabled;

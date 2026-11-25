@@ -21,6 +21,8 @@
   <RimTalk_ToddlersExpansion_YoungPawn_MapExit>Leaving the map</RimTalk_ToddlersExpansion_YoungPawn_MapExit>
   <RimTalk_ToddlersExpansion_YoungPawn_AllowMapExit>Allow young pawns to leave on their own</RimTalk_ToddlersExpansion_YoungPawn_AllowMapExit>
   <RimTalk_ToddlersExpansion_YoungPawn_AllowMapExitTooltip>Allow babies and toddlers in this group to walk to an exit when they have no other duty, or when the mod sends a straggler away. Applies to new jobs. Releases, direct orders and scheduled group departures work as usual.</RimTalk_ToddlersExpansion_YoungPawn_AllowMapExitTooltip>
+  <RimTalk_ToddlersExpansion_YoungPawn_SkipSafeToddlerCribReturn>Skip crib returns for safe toddlers</RimTalk_ToddlersExpansion_YoungPawn_SkipSafeToddlerCribReturn>
+  <RimTalk_ToddlersExpansion_YoungPawn_SkipSafeToddlerCribReturnTooltip>Colonists leave mobile toddlers in this group where they are when they are inside their allowed area and the temperature is safe. Rescue and medical care still work as usual.</RimTalk_ToddlersExpansion_YoungPawn_SkipSafeToddlerCribReturnTooltip>
   <RimTalk_ToddlersExpansion_YoungPawn_SupplyFood>Provide food supplies</RimTalk_ToddlersExpansion_YoungPawn_SupplyFood>
   <RimTalk_ToddlersExpansion_YoungPawn_SupplyFoodTooltip>Give eligible young pawns food when they arrive on a colony map or join a traveling group. Outsiders qualify if their faction is non-hostile. Traveling children may receive portable rations.</RimTalk_ToddlersExpansion_YoungPawn_SupplyFoodTooltip>
   <RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarried>Feed while carried</RimTalk_ToddlersExpansion_YoungPawn_FeedWhileCarried>

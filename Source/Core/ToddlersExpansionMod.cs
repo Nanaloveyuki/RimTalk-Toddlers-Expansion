@@ -498,6 +498,7 @@ namespace RimTalk_ToddlersExpansion.Core
 				"RimTalk_ToddlersExpansion_EnableToddlerPlaySafetyChecks_Tooltip".Translate());
 			listingStandard.Gap();
 			DrawYoungPawnToggle(listingStandard, "FamilyBedroomThoughts", ref ToddlersExpansionSettings.EnableFamilyBedroomThoughts);
+			DrawYoungPawnGroupSettings(listingStandard, "SkipSafeToddlerCribReturn", ToddlersExpansionSettings.SkipSafeToddlerCribReturn, includeNonColonists: false);
 			listingStandard.GapLine();
 		}
 

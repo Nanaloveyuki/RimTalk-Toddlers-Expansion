@@ -47,6 +47,7 @@ namespace RimTalk_ToddlersExpansion.Core
 		public static bool enableHostileToddlerColonistThinkTree = true;
 		public static bool preventColonistAttackingHostileToddler = true;
 		public static bool enableToddlerPlaySafetyChecks = true;
+		internal static readonly YoungPawnGroupSetting SkipSafeToddlerCribReturn = new(false, false, false, false);
 		public static bool enableNatureRunningSafetyChecks = true;
 		public static bool enableUnder3HairRendering = false;
 		public static bool enablePrisonerBabyHair;
@@ -222,6 +223,7 @@ namespace RimTalk_ToddlersExpansion.Core
 			Scribe_Values.Look(ref enableHostileToddlerColonistThinkTree, "enableHostileToddlerColonistThinkTree", true);
 			Scribe_Values.Look(ref preventColonistAttackingHostileToddler, "preventColonistAttackingHostileToddler", true);
 			Scribe_Values.Look(ref enableToddlerPlaySafetyChecks, "enableToddlerPlaySafetyChecks", true);
+			SkipSafeToddlerCribReturn.ExposeData("skipSafeToddlerCribReturn");
 			Scribe_Values.Look(ref enableNatureRunningSafetyChecks, "enableNatureRunningSafetyChecks", true);
 			Scribe_Values.Look(ref enableUnder3HairRendering, "enableUnder3HairRendering", false);
 			Scribe_Values.Look(ref enablePrisonerBabyHair, "enablePrisonerBabyHair", enableUnder3HairRendering);
