@@ -1,3 +1,4 @@
+using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using UnityEngine;
 using Verse;
@@ -9,9 +10,11 @@ namespace RimTalk_ToddlersExpansion.Language
 		private const int UpdateIntervalTicks = 2500;
 		private bool _removeBecauseNotToddler;
 
-		public override bool ShouldRemove => pawn == null
-			|| Severity >= 1f
-			|| _removeBecauseNotToddler;
+		public override bool ShouldRemove => pawn == null || _removeBecauseNotToddler;
+		public override bool Visible => Severity < 1f && base.Visible;
+		public override int CurStageIndex => ToddlersExpansionSettings.UseCustomLearningSchedule
+			? Mathf.Min(def.stages.Count - 1, LanguageLevelUtility.GetLanguageTier(Severity))
+			: base.CurStageIndex;
 
 		public float Progress01 => Mathf.Clamp01(Severity);
 
@@ -31,7 +34,10 @@ namespace RimTalk_ToddlersExpansion.Language
 
 			float agingRateFactor = pawn.ageTracker?.BiologicalTicksPerTick ?? 1f;
 			float factor = UpdateIntervalTicks * agingRateFactor;
-			Severity += LanguageLevelUtility.GetLearningPerBioTick(pawn) * factor * (1f / LanguageLevelUtility.GetToddlersManipulationLearningFactor());
+			if (Severity < 1f)
+			{
+				Severity = LanguageLevelUtility.Advance(pawn, Severity, factor);
+			}
 		}
 
 		public override string SeverityLabel

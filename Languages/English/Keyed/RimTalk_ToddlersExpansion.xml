@@ -133,6 +133,17 @@
   <RimTalk_ToddlersExpansion_NewbornToToddlerDays_Desc>Controls when a newborn/baby switches into the toddler life stage. Because toddler self-care and similar systems use toddler growth percentage, their progress thresholds stay aligned automatically.</RimTalk_ToddlersExpansion_NewbornToToddlerDays_Desc>
   <RimTalk_ToddlersExpansion_NewbornToToddlerDays>Newborn to toddler age: {0} days ({1} years)</RimTalk_ToddlersExpansion_NewbornToToddlerDays>
   <RimTalk_Language_LearningFactor>Learning speed: {0}</RimTalk_Language_LearningFactor>
+  <RimTalk_ToddlerGrowth_CustomSchedule>Customize learning stages</RimTalk_ToddlerGrowth_CustomSchedule>
+  <RimTalk_ToddlerGrowth_ScheduleHelp>Walking, self-care, and speech each advance in biological days from the start of toddlerhood. Existing toddlers keep their progress and continue learning until childhood.</RimTalk_ToddlerGrowth_ScheduleHelp>
+  <RimTalk_ToddlerGrowth_Crawling>Crawl for {0} days before taking first steps</RimTalk_ToddlerGrowth_Crawling>
+  <RimTalk_ToddlerGrowth_WobblyWalking>Walk unsteadily for {0} days before walking steadily</RimTalk_ToddlerGrowth_WobblyWalking>
+  <RimTalk_ToddlerGrowth_IneptManipulation>Learn to eat unaided in {0} days</RimTalk_ToddlerGrowth_IneptManipulation>
+  <RimTalk_ToddlerGrowth_ClumsyManipulation>Learn to dress unaided {0} days after learning to eat</RimTalk_ToddlerGrowth_ClumsyManipulation>
+  <RimTalk_ToddlerGrowth_ConfidentManipulation>Master self-care {0} days after learning to dress</RimTalk_ToddlerGrowth_ConfidentManipulation>
+  <RimTalk_ToddlerGrowth_Babbling>Babble for {0} days before saying first words</RimTalk_ToddlerGrowth_Babbling>
+  <RimTalk_ToddlerGrowth_SingleWords>Speak in short phrases {0} days after first words</RimTalk_ToddlerGrowth_SingleWords>
+  <RimTalk_ToddlerGrowth_ShortPhrases>Speak clearly {0} days after learning short phrases</RimTalk_ToddlerGrowth_ShortPhrases>
+  <RimTalk_ToddlerGrowth_LanguageDuration>Speech learning time ×{0} (relative to toddlerhood)</RimTalk_ToddlerGrowth_LanguageDuration>
 
   <!-- Feeding Settings -->
   <RimTalk_ToddlersExpansion_Feeding_Settings_Header>Feeding</RimTalk_ToddlersExpansion_Feeding_Settings_Header>

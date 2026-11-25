@@ -315,7 +315,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 				}
 
 				// 尝试分配背负关系
-				if (ToddlerCarryingUtility.TryMountToddler(potentialCarrier, toddler))
+				if (ToddlerCarryingUtility.TryMountToddlerAutomatically(potentialCarrier, toddler))
 				{
 					if (ToddlersExpansionSettings.ShouldEmitVerboseDebugLogs)
 					{

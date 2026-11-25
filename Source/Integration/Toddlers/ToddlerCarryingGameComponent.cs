@@ -348,7 +348,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		private static bool IsUncarriedVisitorToddler(Pawn pawn)
 		{
-			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned)
+			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || pawn.Drafted)
 			{
 				return false;
 			}
@@ -417,7 +417,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 					continue;
 				}
 
-				if (!candidate.Spawned || candidate.MapHeld != toddler.MapHeld || candidate.jobs == null)
+				if (!candidate.Spawned || candidate.MapHeld != toddler.MapHeld || candidate.jobs == null || candidate.Drafted)
 				{
 					continue;
 				}
@@ -429,6 +429,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 						return false;
 					}
 
+					continue;
+				}
+
+				if (candidate.CurJob?.playerForced == true || candidate.jobs.jobQueue.Count > 0
+					|| !candidate.jobs.IsCurrentJobPlayerInterruptible()
+					|| candidate.CurJob?.def.forceCompleteBeforeNextJob == true)
+				{
 					continue;
 				}
 
@@ -465,7 +472,8 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 			Job job = JobMaker.MakeJob(pickupJobDef, toddler);
 			job.locomotionUrgency = LocomotionUrgency.Jog;
-			bool assigned = bestCarrier.jobs.TryTakeOrderedJob(job);
+			bestCarrier.jobs.StartJob(job, JobCondition.InterruptOptional, preToilReservationsCanFail: true);
+			bool assigned = bestCarrier.CurJob == job;
 			if (assigned && ToddlersExpansionSettings.ShouldEmitVerboseDebugLogs)
 			{
 				Log.Message($"[RimTalk_ToddlersExpansion][VisitorRepickup] Assigning {bestCarrier.LabelShort} to pick up visitor toddler {toddler.LabelShort}.");
@@ -576,7 +584,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		private static void TryStartExitMap(Pawn pawn)
 		{
-			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
+			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || pawn.Drafted || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
 			{
 				return;
 			}

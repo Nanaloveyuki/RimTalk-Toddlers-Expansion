@@ -108,6 +108,17 @@
   <RimTalk_ToddlersExpansion_NewbornToToddlerDays_Desc>控制嬰兒在出生後多少天進入幼兒階段。學習自理等系統使用的是幼兒生命週期進度百分比，所以相關占比會自動保持對齊。</RimTalk_ToddlersExpansion_NewbornToToddlerDays_Desc>
   <RimTalk_ToddlersExpansion_NewbornToToddlerDays>嬰兒變為幼兒年齡：{0} 天（{1} 歲）</RimTalk_ToddlersExpansion_NewbornToToddlerDays>
   <RimTalk_Language_LearningFactor>學習速度: {0}</RimTalk_Language_LearningFactor>
+  <RimTalk_ToddlerGrowth_CustomSchedule>自訂各成長階段的時長</RimTalk_ToddlerGrowth_CustomSchedule>
+  <RimTalk_ToddlerGrowth_ScheduleHelp>從進入幼兒期起，走路、自理和說話各自按生理天數推進。已有幼兒從目前進度繼續學習，長成兒童時結束。</RimTalk_ToddlerGrowth_ScheduleHelp>
+  <RimTalk_ToddlerGrowth_Crawling>爬行 {0} 天後邁出第一步</RimTalk_ToddlerGrowth_Crawling>
+  <RimTalk_ToddlerGrowth_WobblyWalking>搖搖晃晃走 {0} 天後走穩</RimTalk_ToddlerGrowth_WobblyWalking>
+  <RimTalk_ToddlerGrowth_IneptManipulation>{0} 天後學會自己吃飯</RimTalk_ToddlerGrowth_IneptManipulation>
+  <RimTalk_ToddlerGrowth_ClumsyManipulation>會吃飯後，再過 {0} 天學會自己穿衣</RimTalk_ToddlerGrowth_ClumsyManipulation>
+  <RimTalk_ToddlerGrowth_ConfidentManipulation>會穿衣後，再過 {0} 天熟練自理</RimTalk_ToddlerGrowth_ConfidentManipulation>
+  <RimTalk_ToddlerGrowth_Babbling>牙牙學語 {0} 天後說出單詞</RimTalk_ToddlerGrowth_Babbling>
+  <RimTalk_ToddlerGrowth_SingleWords>會說單詞後，再過 {0} 天學會說短句</RimTalk_ToddlerGrowth_SingleWords>
+  <RimTalk_ToddlerGrowth_ShortPhrases>會說短句後，再過 {0} 天能清楚表達</RimTalk_ToddlerGrowth_ShortPhrases>
+  <RimTalk_ToddlerGrowth_LanguageDuration>語言學習時長 ×{0}（相對於整個幼兒期）</RimTalk_ToddlerGrowth_LanguageDuration>
 
   <RimTalk_ToddlersExpansion_Feeding_Settings_Header>進食設置</RimTalk_ToddlersExpansion_Feeding_Settings_Header>
   <RimTalk_ToddlersExpansion_ToddlerEatingSpeed>幼兒進食速度倍率：x{0}（越大越快）</RimTalk_ToddlersExpansion_ToddlerEatingSpeed>

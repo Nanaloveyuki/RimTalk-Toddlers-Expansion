@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RimTalk_ToddlersExpansion.Harmony;
 using RimTalk_ToddlersExpansion.Integration.RimTalk;
+using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimWorld;
 using UnityEngine;
 using Verse;
@@ -90,7 +91,7 @@ namespace RimTalk_ToddlersExpansion.Core
 		private void DrawGeneralSettingsPage(Rect inRect, ToddlersExpansionSettings settings)
 		{
 			const float columnGap = 24f;
-			float contentHeight = 2350f;
+			float contentHeight = ToddlersExpansionSettings.UseCustomLearningSchedule ? 2850f : 2350f;
 			Rect viewRect = new Rect(0f, 0f, inRect.width - 20f, contentHeight);
 			float columnWidth = (viewRect.width - columnGap) / 2f;
 			Rect leftColumnRect = new Rect(0f, 0f, columnWidth, contentHeight);
@@ -394,9 +395,8 @@ namespace RimTalk_ToddlersExpansion.Core
 
 		internal static void DrawLanguageSettingsSection(SettingsListing listingStandard)
 		{
-			listingStandard.Heading("RimTalk_Language_Settings_Header".Translate());
-			listingStandard.Label("RimTalk_ToddlersExpansion_NewbornToToddlerDays_Desc".Translate());
-			listingStandard.Gap();
+			const string key = "RimTalk_ToddlerGrowth_";
+			listingStandard.Heading("RimTalk_ToddlersExpansion_Iris_Growth".Translate());
 			int oldThresholdDays = ToddlersExpansionSettings.GetNewbornToToddlerDays();
 			ToddlersExpansionSettings.newbornToToddlerDays =
 				listingStandard.Slider("RimTalk_ToddlersExpansion_NewbornToToddlerDays",
@@ -406,11 +406,33 @@ namespace RimTalk_ToddlersExpansion.Core
 				Integration.Toddlers.ToddlerAgeSettingsUtility.ApplyConfiguredToddlerAge();
 			}
 			listingStandard.Gap();
-			ToddlersExpansionSettings.learningFactor_Talking =
-				listingStandard.Slider("RimTalk_Language_LearningFactor",
-					ToddlersExpansionSettings.learningFactor_Talking, 0.1f, 3f, ToddlersExpansionSettings.learningFactor_Talking.ToString("0.##"));
+			listingStandard.CheckboxLabeled(key + "CustomSchedule", ref ToddlersExpansionSettings.UseCustomLearningSchedule);
+			if (ToddlersExpansionSettings.UseCustomLearningSchedule)
+			{
+				listingStandard.Label((key + "ScheduleHelp").Translate());
+				listingStandard.Gap();
+				ToddlersExpansionSettings.CrawlingDays = PhaseDays("Crawling", ToddlersExpansionSettings.CrawlingDays);
+				ToddlersExpansionSettings.WobblyWalkingDays = PhaseDays("WobblyWalking", ToddlersExpansionSettings.WobblyWalkingDays);
+				listingStandard.Gap();
+				ToddlersExpansionSettings.IneptManipulationDays = PhaseDays("IneptManipulation", ToddlersExpansionSettings.IneptManipulationDays);
+				ToddlersExpansionSettings.ClumsyManipulationDays = PhaseDays("ClumsyManipulation", ToddlersExpansionSettings.ClumsyManipulationDays);
+				ToddlersExpansionSettings.ConfidentManipulationDays = PhaseDays("ConfidentManipulation", ToddlersExpansionSettings.ConfidentManipulationDays);
+				listingStandard.Gap();
+				ToddlersExpansionSettings.BabblingDays = PhaseDays("Babbling", ToddlersExpansionSettings.BabblingDays);
+				ToddlersExpansionSettings.SingleWordDays = PhaseDays("SingleWords", ToddlersExpansionSettings.SingleWordDays);
+				ToddlersExpansionSettings.ShortPhraseDays = PhaseDays("ShortPhrases", ToddlersExpansionSettings.ShortPhraseDays);
+			}
+			else
+			{
+				float duration = ToddlersExpansionSettings.learningFactor_Talking;
+				ToddlersExpansionSettings.learningFactor_Talking =
+					listingStandard.Slider(key + "LanguageDuration", duration, 0.1f, 3f, duration.ToString("0.##"));
+			}
 			listingStandard.Gap();
 			listingStandard.GapLine();
+
+			int PhaseDays(string phase, int days) =>
+				listingStandard.Slider(key + phase, days, 1, ToddlerLearningSchedule.MaxPhaseDays, days);
 		}
 
 		internal static void DrawFeedingSettingsSection(SettingsListing listingStandard)

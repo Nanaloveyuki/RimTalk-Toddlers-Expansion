@@ -90,6 +90,9 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 			return true;
 		}
 
+		internal static bool TryMountToddlerAutomatically(Pawn carrier, Pawn toddler) =>
+			!carrier.Drafted && !toddler.Drafted && TryMountToddler(carrier, toddler);
+
 		/// <summary>
 		/// 尝试给幼儿分�?被抱着"的Job
 		/// </summary>
@@ -462,7 +465,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				while (attempts < carriers.Count)
 				{
 					Pawn carrier = carriers[carrierIndex];
-					if (TryMountToddler(carrier, toddler))
+					if (TryMountToddlerAutomatically(carrier, toddler))
 					{
 						break;
 					}

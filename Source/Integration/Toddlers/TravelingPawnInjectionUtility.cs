@@ -612,11 +612,6 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				return false;
 			}
 
-			if (!TryGetWalkingLearningFactor(out float learningFactor))
-			{
-				return false;
-			}
-
 			float toddlerStartAge = ToddlersCompatUtility.GetToddlerMinAgeYears(samplePawn);
 			float toddlerEndAge = ToddlersCompatUtility.GetToddlerEndAgeYears(samplePawn);
 			if (!IsValidAgeRange(toddlerStartAge, toddlerEndAge))
@@ -627,8 +622,14 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				toddlerEndAge = generatedMaxAge + ToddlerGenerationEndInsetYears;
 			}
 
+			if (ToddlerLearningSchedule.TryGetNativeSchedule(learningToWalk, out ToddlerLearningSchedule schedule))
+			{
+				minimumWalkingAge = toddlerStartAge + schedule.FirstPhaseDays / GenDate.DaysPerYear;
+				return true;
+			}
+
 			float wobblyMinSeverity = learningToWalk.stages[1].minSeverity;
-			if (learningFactor <= 0f || wobblyMinSeverity < 0f)
+			if (!TryGetWalkingLearningFactor(out float learningFactor) || learningFactor <= 0f || wobblyMinSeverity < 0f)
 			{
 				return false;
 			}

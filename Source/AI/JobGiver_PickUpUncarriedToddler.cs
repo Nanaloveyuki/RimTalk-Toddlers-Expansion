@@ -15,7 +15,7 @@ namespace RimTalk_ToddlersExpansion.AI
 	{
 		protected override Job TryGiveJob(Pawn pawn)
 		{
-			if (!ToddlerCarryingUtility.IsValidCarrier(pawn))
+			if (pawn.Drafted || !ToddlerCarryingUtility.IsValidCarrier(pawn))
 			{
 				return null;
 			}
@@ -60,7 +60,7 @@ namespace RimTalk_ToddlersExpansion.AI
 			{
 				Pawn p = pawns[i];
 
-				if (!ToddlerCarryingUtility.CanBeCarried(p))
+				if (!ToddlerCarryingUtility.CanBeCarried(p) || p.Drafted)
 				{
 					continue;
 				}

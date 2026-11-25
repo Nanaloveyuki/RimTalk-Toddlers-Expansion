@@ -22,20 +22,13 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		public static void NotifyPawnSpawned(Pawn pawn)
 		{
-			bool canAddLanguage = ToddlersExpansionHediffDefOf.RimTalk_ToddlerLanguageLearning != null;
-			bool canAddBabbling = ToddlersExpansionHediffDefOf.RimTalk_BabyBabbling != null;
-			int addedLanguage = 0;
-			int addedBabbling = 0;
-			EnsurePawnLanguageState(pawn, canAddLanguage, canAddBabbling, ref addedLanguage, ref addedBabbling);
-		}
-
-		private static void EnsurePawnLanguageState(Pawn pawn, bool canAddLanguage, bool canAddBabbling, ref int addedLanguage, ref int addedBabbling)
-		{
 			if (pawn == null || pawn.Dead || pawn.Destroyed || pawn.health?.hediffSet == null)
 			{
 				return;
 			}
 
+			bool canAddLanguage = ToddlersExpansionHediffDefOf.RimTalk_ToddlerLanguageLearning != null;
+			bool canAddBabbling = ToddlersExpansionHediffDefOf.RimTalk_BabyBabbling != null;
 			bool hasLanguageHediff = HasLanguageHediff(pawn, canAddLanguage);
 			bool hasNativeLearningHediff = HasToddlersNativeLearningHediff(pawn);
 			bool isToddlerLifeStage = ToddlersCompatUtility.IsToddler(pawn);
@@ -52,33 +45,19 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 				{
 					Hediff babbling = HediffMaker.MakeHediff(ToddlersExpansionHediffDefOf.RimTalk_BabyBabbling, pawn);
 					pawn.health.AddHediff(babbling);
-					addedBabbling += 1;
 				}
 				return;
 			}
 
-			if (isToddlerLifeStage && !hasNativeLearningHediff)
+			if (isToddlerLifeStage && !hasNativeLearningHediff && !hasLanguageHediff)
 			{
 				TryResetToddlersNativeLearningHediffs(pawn);
-				hasNativeLearningHediff = HasToddlersNativeLearningHediff(pawn);
 			}
 
 			RemoveBabblingHediffIfPresent(pawn, canAddBabbling);
-			if (canAddLanguage && isToddlerLifeStage && hasNativeLearningHediff)
+			if (isToddlerLifeStage)
 			{
-				Hediff existingLanguage = pawn.health.hediffSet.GetFirstHediffOfDef(ToddlersExpansionHediffDefOf.RimTalk_ToddlerLanguageLearning);
-				bool hadLanguage = existingLanguage != null;
-				if (!hadLanguage
-					&& LanguageLevelUtility.TryGetToddlersLanguageInitialProgress(pawn, out float initialProgress)
-					&& initialProgress < 1f
-					&& LanguageLevelUtility.TryGetOrCreateLanguageHediff(pawn, out Hediff language))
-				{
-					language.Severity = initialProgress;
-					if (language != null)
-					{
-						addedLanguage += 1;
-					}
-				}
+				LanguageLevelUtility.EnsureLanguageHediffForAge(pawn);
 			}
 		}
 

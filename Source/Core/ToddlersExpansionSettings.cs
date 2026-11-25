@@ -26,9 +26,18 @@ namespace RimTalk_ToddlersExpansion.Core
 		public static float boredomDailyRecoveryRate = 0.07f;
 		public static bool enableAutoDetection = true;
 
-		// Language learning settings
+		// Growth settings
 		public static float learningFactor_Talking = 0.8f;
 		public static int newbornToToddlerDays = 60;
+		internal static bool UseCustomLearningSchedule;
+		internal static int CrawlingDays = 48;
+		internal static int WobblyWalkingDays = 48;
+		internal static int IneptManipulationDays = 29;
+		internal static int ClumsyManipulationDays = 29;
+		internal static int ConfidentManipulationDays = 38;
+		internal static int BabblingDays = 24;
+		internal static int SingleWordDays = 24;
+		internal static int ShortPhraseDays = 24;
 
 		// Toddler eating speed settings
 		public static float toddlerEatingSpeedFactor = 1f;
@@ -198,6 +207,15 @@ namespace RimTalk_ToddlersExpansion.Core
 
 			Scribe_Values.Look(ref learningFactor_Talking, "learningFactor_Talking", 0.8f);
 			Scribe_Values.Look(ref newbornToToddlerDays, "newbornToToddlerDays", 60);
+			Scribe_Values.Look(ref UseCustomLearningSchedule, "UseCustomLearningSchedule", false);
+			Scribe_Values.Look(ref CrawlingDays, "CrawlingDays", 48);
+			Scribe_Values.Look(ref WobblyWalkingDays, "WobblyWalkingDays", 48);
+			Scribe_Values.Look(ref IneptManipulationDays, "IneptManipulationDays", 29);
+			Scribe_Values.Look(ref ClumsyManipulationDays, "ClumsyManipulationDays", 29);
+			Scribe_Values.Look(ref ConfidentManipulationDays, "ConfidentManipulationDays", 38);
+			Scribe_Values.Look(ref BabblingDays, "BabblingDays", 24);
+			Scribe_Values.Look(ref SingleWordDays, "SingleWordDays", 24);
+			Scribe_Values.Look(ref ShortPhraseDays, "ShortPhraseDays", 24);
 			Scribe_Values.Look(ref toddlerEatingSpeedFactor, "toddlerEatingSpeedFactor", 1f);
 
 			Scribe_Values.Look(ref enablePrisonerToddlerColonistThinkTree, "enablePrisonerToddlerColonistThinkTree", true);

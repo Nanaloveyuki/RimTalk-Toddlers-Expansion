@@ -33,6 +33,7 @@ namespace RimTalk_ToddlersExpansion.Integration.Toddlers
 
 		protected override IEnumerable<Toil> MakeNewToils()
 		{
+			this.FailOn(() => !job.playerForced && (pawn.Drafted || Toddler?.Drafted == true));
 			// 验证幼儿
 			this.FailOnDespawnedNullOrForbidden(TargetIndex.A);
 			// 走到幼儿身边

@@ -1,5 +1,3 @@
-using System;
-using System.Reflection;
 using RimTalk_ToddlersExpansion.Core;
 using RimTalk_ToddlersExpansion.Integration.Toddlers;
 using RimWorld;
@@ -11,14 +9,9 @@ namespace RimTalk_ToddlersExpansion.Language
 	public static class LanguageLevelUtility
 	{
 		private const string VersionKey = "lang1";
-		private const float DaysPerYear = 60f;
-		private const float TicksPerDay = 60000f;
-		private const float MinLearningFactor = 0.01f;
-		private const int LearningFactorCacheTicks = 2500;
-		private static bool _toddlersApiResolved;
-		private static FieldInfo _toddlersManipulationLearningFactorField;
-		private static int _cachedManipulationLearningFactorUntilTick = -1;
-		private static float _cachedManipulationLearningFactor = 1f;
+		private const float SingleWordProgress = 0.25f;
+		private const float ShortPhraseProgress = 0.5f;
+		private const float ClearSpeechProgress = 0.75f;
 		private static readonly string[] TierKeys =
 		{
 			"babble",
@@ -38,17 +31,17 @@ namespace RimTalk_ToddlersExpansion.Language
 		public static int GetLanguageTier(float progress01)
 		{
 			float clamped = Mathf.Clamp01(progress01);
-			if (clamped < 0.25f)
+			if (clamped < SingleWordProgress)
 			{
 				return 0;
 			}
 
-			if (clamped < 0.5f)
+			if (clamped < ShortPhraseProgress)
 			{
 				return 1;
 			}
 
-			if (clamped < 0.75f)
+			if (clamped < ClearSpeechProgress)
 			{
 				return 2;
 			}
@@ -108,8 +101,31 @@ namespace RimTalk_ToddlersExpansion.Language
 			return language != null;
 		}
 
-		// Mirrors Toddlers.ToddlerLearningUtility.ResetHediffsForAge initial severity logic:
-		// severity = PercentGrowth(pawn) / Toddlers_Settings.learningFactor_Manipulation
+		internal static void EnsureLanguageHediffForAge(Pawn pawn, bool resetExisting = false)
+		{
+			HediffDef def = ToddlersExpansionHediffDefOf.RimTalk_ToddlerLanguageLearning;
+			if (def == null || pawn?.health?.hediffSet == null)
+			{
+				return;
+			}
+
+			Hediff existing = pawn.health.hediffSet.GetFirstHediffOfDef(def);
+			if ((existing != null && !resetExisting) || !TryGetToddlersLanguageInitialProgress(pawn, out float progress))
+			{
+				return;
+			}
+
+			if (existing != null)
+			{
+				existing.Severity = progress;
+				return;
+			}
+
+			Hediff language = HediffMaker.MakeHediff(def, pawn);
+			language.Severity = progress;
+			pawn.health.AddHediff(language);
+		}
+
 		public static bool TryGetToddlersLanguageInitialProgress(Pawn pawn, out float progress01)
 		{
 			progress01 = 0f;
@@ -123,87 +139,31 @@ namespace RimTalk_ToddlersExpansion.Language
 				return false;
 			}
 
-			if (!TryGetToddlersPercentGrowth(pawn, out float percentGrowth))
-			{
-				return false;
-			}
-
-			progress01 = Mathf.Clamp01(percentGrowth / GetToddlersManipulationLearningFactor());
+			float days = ToddlerLearningSchedule.GetDaysSinceToddler(pawn);
+			progress01 = ToddlersExpansionSettings.UseCustomLearningSchedule
+				? GetCustomSchedule().GetProgress(days)
+				: Mathf.Clamp01(days * GenDate.TicksPerDay * GetLearningPerBioTick(pawn));
 			return true;
 		}
 
-		public static float GetLearningPerBioTick(Pawn pawn)
+		internal static float Advance(Pawn pawn, float progress, float biologicalTicks)
+		{
+			return ToddlersExpansionSettings.UseCustomLearningSchedule
+				? GetCustomSchedule().Advance(progress, biologicalTicks)
+				: progress + GetLearningPerBioTick(pawn) * biologicalTicks;
+		}
+
+		private static float GetLearningPerBioTick(Pawn pawn)
 		{
 			float minAge = ToddlersCompatUtility.GetToddlerMinAgeYears(pawn);
 			float endAge = ToddlersCompatUtility.GetToddlerEndAgeYears(pawn);
-			float stageTicks = Mathf.Max(1f, (endAge - minAge) * DaysPerYear * TicksPerDay);
-			return 1f / stageTicks;
+			float stageTicks = Mathf.Max(1f, (endAge - minAge) * GenDate.DaysPerYear * GenDate.TicksPerDay);
+			float duration = ToddlersExpansionSettings.learningFactor_Talking;
+			return 1f / (stageTicks * (float.IsFinite(duration) ? Mathf.Clamp(duration, 0.1f, 3f) : 0.8f));
 		}
 
-		public static float GetToddlersManipulationLearningFactor()
-		{
-			int ticksGame = Find.TickManager?.TicksGame ?? -1;
-			if (ticksGame >= 0 && ticksGame < _cachedManipulationLearningFactorUntilTick)
-			{
-				return _cachedManipulationLearningFactor;
-			}
-
-			ResolveToddlersApi();
-			float result = 1f;
-			if (_toddlersManipulationLearningFactorField != null)
-			{
-				try
-				{
-					object value = _toddlersManipulationLearningFactorField.GetValue(null);
-					if (value is float factor && factor > MinLearningFactor)
-					{
-						result = factor;
-					}
-				}
-				catch
-				{
-				}
-			}
-
-			_cachedManipulationLearningFactor = result;
-			if (ticksGame >= 0)
-			{
-				_cachedManipulationLearningFactorUntilTick = ticksGame + LearningFactorCacheTicks;
-			}
-
-			return result;
-		}
-
-		private static bool TryGetToddlersPercentGrowth(Pawn pawn, out float percentGrowth)
-		{
-			percentGrowth = 0f;
-			if (pawn?.ageTracker == null)
-			{
-				return false;
-			}
-
-			float minAge = ToddlersCompatUtility.GetToddlerMinAgeYears(pawn);
-			float endAge = ToddlersCompatUtility.GetToddlerEndAgeYears(pawn);
-			float stageTicks = Mathf.Max(1f, (endAge - minAge) * DaysPerYear * TicksPerDay);
-			float ticksSinceBaby = pawn.ageTracker.AgeBiologicalTicks - (minAge * DaysPerYear * TicksPerDay);
-			percentGrowth = Mathf.Clamp01(ticksSinceBaby / stageTicks);
-			return true;
-		}
-
-		private static void ResolveToddlersApi()
-		{
-			if (_toddlersApiResolved)
-			{
-				return;
-			}
-
-			_toddlersApiResolved = true;
-
-			Type toddlersSettingsType = GenTypes.GetTypeInAnyAssembly("Toddlers.Toddlers_Settings");
-			if (toddlersSettingsType != null)
-			{
-				_toddlersManipulationLearningFactorField = toddlersSettingsType.GetField("learningFactor_Manipulation", BindingFlags.Public | BindingFlags.Static);
-			}
-		}
+		private static ToddlerLearningSchedule GetCustomSchedule() => new ToddlerLearningSchedule(
+			ToddlersExpansionSettings.BabblingDays, SingleWordProgress, ToddlersExpansionSettings.SingleWordDays,
+			ShortPhraseProgress, ToddlersExpansionSettings.ShortPhraseDays, ClearSpeechProgress);
 	}
 }

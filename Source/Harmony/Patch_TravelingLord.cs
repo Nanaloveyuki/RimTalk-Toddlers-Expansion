@@ -102,7 +102,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 					if (guardian != null)
 					{
 						// 优先尝试背着
-						if (ToddlerCarryingUtility.TryMountToddler(guardian, p))
+						if (ToddlerCarryingUtility.TryMountToddlerAutomatically(guardian, p))
 						{
 							return;
 						}
@@ -208,8 +208,13 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void TryMakeToddlerFollow(Pawn toddler, Pawn guardian)
 		{
+			if (toddler == null || toddler.Drafted)
+			{
+				return;
+			}
+
 			// 只有当 toddler 没有工作且没有跟随任务时才分配跟随
-			if (toddler?.CurJob?.def == null || toddler.CurJob.def == RimWorld.JobDefOf.Goto)
+			if (toddler.CurJob?.def == null || toddler.CurJob.def == RimWorld.JobDefOf.Goto)
 			{
 				var job = JobMaker.MakeJob(RimWorld.JobDefOf.Follow, guardian);
 				job.expiryInterval = 120;
@@ -271,7 +276,7 @@ namespace RimTalk_ToddlersExpansion.Harmony
 
 		private static void ForcePawnLeaveMap(Pawn pawn)
 		{
-			if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
+		if (pawn == null || pawn.Dead || pawn.Destroyed || !pawn.Spawned || pawn.Drafted || !ToddlerExitSettings.AllowsAutomaticExit(pawn))
 				return;
 
 			if (pawn.Downed
